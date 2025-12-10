@@ -440,7 +440,7 @@ PRODUCT DETAILS PAGE - style-product-details.css
 }
 
 [data-theme="dark"] .product-category {
-    color: var(--text-muted);
+    color: #ffffff;
 }
 
 [data-theme="dark"] .product-info .price {

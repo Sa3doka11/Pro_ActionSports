@@ -1189,8 +1189,7 @@
       right: 0;
       height: 1.5px;
       background-color: currentColor;
-      transform: translateY(-50%);
-    }
+      transform: translateY(-50%) rotate(-5deg);    }
 
     [data-theme="dark"] .product-card .product-price .old-price {
       color: rgba(245, 247, 251, 0.6);

@@ -139,11 +139,7 @@ function normalizePublicBanner(raw = {}, index = 0) {
         title: typeof raw.title === 'string' ? raw.title : (typeof raw.heading === 'string' ? raw.heading : ''),
         subtitle: typeof raw.subtitle === 'string' ? raw.subtitle : (typeof raw.tagline === 'string' ? raw.tagline : ''),
         description: typeof raw.description === 'string' ? raw.description : (typeof raw.body === 'string' ? raw.body : ''),
-        ctaText: typeof raw.ctaText === 'string' ? raw.ctaText : (typeof raw.buttonText === 'string' ? raw.buttonText : ''),
-        ctaUrl: typeof raw.ctaUrl === 'string' ? raw.ctaUrl : (typeof raw.link === 'string' ? raw.link : ''),
-        ctaTarget: typeof raw.ctaTarget === 'string' ? raw.ctaTarget : (typeof raw.target === 'string' ? raw.target : ''),
         backgroundImage: bannerImage,
-        accentColor: typeof raw.accentColor === 'string' ? raw.accentColor : (typeof raw.buttonColor === 'string' ? raw.buttonColor : ''),
         textColor: typeof raw.textColor === 'string' ? raw.textColor : '',
         overlayColor: typeof raw.overlayColor === 'string' ? raw.overlayColor : '',
         raw
@@ -174,8 +170,7 @@ function getHomepageBannerElements() {
         container: document.getElementById('homepageBanner'),
         title: document.getElementById('homepageBannerTitle'),
         description: document.getElementById('homepageBannerDescription'),
-        cta: document.getElementById('homepageBannerCta'),
-        section: document.getElementById('call-to-action'),
+                section: document.getElementById('call-to-action'),
         image: document.getElementById('homepageBannerImage'),
         indicatorsContainer: document.getElementById('homepageBannerIndicators'),
         prevButton: document.getElementById('homepageBannerPrev'),
@@ -189,7 +184,6 @@ function applyHomepageBannerToUI(banner) {
         container,
         title,
         description,
-        cta,
         section,
         image
     } = getHomepageBannerElements();
@@ -215,28 +209,7 @@ function applyHomepageBannerToUI(banner) {
         }
     }
 
-    if (cta) {
-        if (banner.ctaText) {
-            safeSetText(cta, banner.ctaText);
-        }
-        if (banner.ctaUrl) {
-            cta.setAttribute('href', banner.ctaUrl);
-        }
-        if (banner.ctaTarget) {
-            cta.setAttribute('target', banner.ctaTarget);
-        } else {
-            cta.removeAttribute('target');
-        }
-
-        if (banner.accentColor) {
-            cta.style.backgroundColor = banner.accentColor;
-            cta.style.borderColor = banner.accentColor;
-        } else {
-            cta.style.backgroundColor = '';
-            cta.style.borderColor = '';
-        }
-    }
-
+    
     if (image) {
         if (banner.backgroundImage) {
             image.src = banner.backgroundImage;
