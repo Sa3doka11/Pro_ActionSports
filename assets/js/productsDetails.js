@@ -349,6 +349,12 @@
             productImg.src = primaryImage;
             productImg.alt = product.name;
             productImg.dataset.activeIndex = '0';
+            productImg.dataset.loaded = 'true';
+        }
+
+        const detailsContainer = document.getElementById('productDetailsContainer');
+        if (detailsContainer) {
+            detailsContainer.dataset.loaded = 'true';
         }
 
         if (galleryContainer) {
@@ -378,6 +384,8 @@
                 });
                 galleryContainer.appendChild(button);
             });
+        } else {
+            galleryContainer?.querySelectorAll('.skeleton').forEach(el => el.remove());
         }
 
         if (productName) productName.textContent = product.name;

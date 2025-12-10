@@ -36,6 +36,96 @@ PRODUCT DETAILS PAGE - style-product-details.css
     box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
 }
 
+.product-image-container .product-image-skeleton {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    z-index: 1;
+}
+
+.product-image-container img[data-loaded="true"] + .product-image-skeleton {
+    opacity: 0;
+    visibility: hidden;
+}
+
+.product-thumbnail.skeleton {
+    pointer-events: none;
+    position: relative;
+}
+
+.product-thumbnail.skeleton::after {
+    border-radius: inherit;
+}
+
+.product-info .skeleton-line {
+    height: 18px;
+    border-radius: 8px;
+}
+
+.product-info h1 .skeleton-line {
+    height: 32px;
+}
+
+.product-info .skeleton-line.short {
+    width: 70%;
+}
+
+.product-info .skeleton-price {
+    height: 28px;
+    border-radius: 10px;
+}
+
+.product-category .skeleton-chip {
+    height: 20px;
+    border-radius: 999px;
+}
+
+.spec-item .skeleton-line {
+    display: block;
+    height: 16px;
+    margin-bottom: 10px;
+}
+
+.spec-item .skeleton-line.short {
+    width: 65%;
+}
+
+.detail-section .skeleton-line {
+    display: block;
+    height: 16px;
+    margin-bottom: 12px;
+}
+
+.detail-section .skeleton-line.short {
+    width: 55%;
+}
+
+.detail-section ul li .skeleton-line {
+    margin: 0;
+}
+
+.read-more-btn {
+    position: relative;
+    overflow: hidden;
+}
+
+.read-more-btn .read-more-text {
+    opacity: 0;
+}
+
+.read-more-btn .skeleton {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+}
+
+.product-details-container[data-loaded="true"] .read-more-btn .read-more-text {
+    opacity: 1;
+}
+.product-details-container[data-loaded="true"] .read-more-btn .skeleton {
+    display: none;
+}
+
 .product-image-container img {
     width: 100%;
     height: 100%;

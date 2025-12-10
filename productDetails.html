@@ -230,29 +230,42 @@
             <!-- Product Image -->
             <div class="product-image-wrapper">
                 <div class="product-image-container" id="imageContainer">
-                    <img src="assets/images/product1.png" alt="Product Image" id="productImg">
+                    <img id="productImg" src="" alt="جاري تحميل صورة المنتج" loading="lazy">
+                    <div class="product-image-skeleton skeleton" aria-hidden="true"></div>
                 </div>
-                <div class="product-thumbnails" id="productGallery" aria-label="معرض صور المنتج"></div>
+                <div class="product-thumbnails" id="productGallery" aria-label="معرض صور المنتج">
+                    <div class="product-thumbnail skeleton" aria-hidden="true"></div>
+                    <div class="product-thumbnail skeleton" aria-hidden="true"></div>
+                    <div class="product-thumbnail skeleton" aria-hidden="true"></div>
+                </div>
             </div>
 
             <!-- Product Info -->
             <div class="product-info-wrapper">
                 <div class="product-info">
-                    <span class="product-category" id="productCategory">جهاز كارديو</span>
-                    <h1 id="productName">جهاز مشي كهربائي</h1>
+                    <span class="product-category" id="productCategory">
+                        <span class="skeleton skeleton-chip" aria-hidden="true"></span>
+                    </span>
+                    <h1 id="productName">
+                        <span class="skeleton skeleton-line" aria-hidden="true"></span>
+                    </h1>
                     <p class="price" id="productPrice">
-                        <span class="price-value">0</span>
+                        <span class="price-value">
+                            <span class="skeleton skeleton-price" aria-hidden="true"></span>
+                        </span>
                         <img src="./assets/images/Saudi_Riyal_Symbol.png" alt="" aria-hidden="true" class="saudi-riyal-symbol" />
                     </p>
                     <p class="description" id="productDescription">
-                        جهاز مشي قوي بمحرك 3 حصان وسرعات متعددة. مثالي للاستخدام المنزلي والتجاري. يتميز بشاشة رقمية
-                        متطورة لعرض السرعة والمسافة والسعرات الحرارية.
+                        <span class="skeleton skeleton-line" aria-hidden="true"></span>
+                        <span class="skeleton skeleton-line short" aria-hidden="true"></span>
+                        <span class="skeleton skeleton-line short" aria-hidden="true"></span>
                     </p>
 
                     <!-- Read More Button -->
                     <div class="product-details-center">
                         <button class="read-more-btn" id="readMoreBtn">
-                            <i class="fa fa-chevron-down"></i> قراءة المزيد من التفاصيل
+                            <span class="read-more-text"> <i class="fa fa-chevron-down"></i> قراءة المزيد من التفاصيل</span>
+                            <span class="skeleton skeleton-button" aria-hidden="true"></span>
                         </button>
                     </div>
 
@@ -261,34 +274,55 @@
                         <!-- العلامة التجارية -->
                         <div class="detail-section" id="brandDetailSection">
                             <h4><i class="fa fa-tag"></i> العلامة التجارية</h4>
-                            <p id="productBrandDetail">جاري تحميل العلامة التجارية...</p>
+                            <p id="productBrandDetail">
+                                <span class="skeleton skeleton-line short" aria-hidden="true"></span>
+                            </p>
                         </div>
 
                         <!-- المواصفات التقنية -->
                         <div class="detail-section">
                             <h4><i class="fa fa-cog"></i> المواصفات التقنية</h4>
-                            <div class="specs-grid" id="specsGrid"></div>
+                            <div class="specs-grid" id="specsGrid">
+                                <div class="spec-item" aria-hidden="true">
+                                    <span class="skeleton skeleton-line" aria-hidden="true"></span>
+                                    <span class="skeleton skeleton-line short" aria-hidden="true"></span>
+                                </div>
+                                <div class="spec-item" aria-hidden="true">
+                                    <span class="skeleton skeleton-line" aria-hidden="true"></span>
+                                    <span class="skeleton skeleton-line short" aria-hidden="true"></span>
+                                </div>
+                                <div class="spec-item" aria-hidden="true">
+                                    <span class="skeleton skeleton-line" aria-hidden="true"></span>
+                                    <span class="skeleton skeleton-line short" aria-hidden="true"></span>
+                                </div>
+                            </div>
                         </div>
 
                         <!-- الاستخدام والفوائد -->
                         <div class="detail-section">
                             <h4><i class="fa fa-heart-pulse"></i> الاستخدام والفوائد</h4>
                             <ul id="usageList">
-                                <li>يتم تحديث هذه المعلومات بناءً على بيانات المنتج.</li>
+                                <li><span class="skeleton skeleton-line" aria-hidden="true"></span></li>
+                                <li><span class="skeleton skeleton-line short" aria-hidden="true"></span></li>
+                                <li><span class="skeleton skeleton-line short" aria-hidden="true"></span></li>
                             </ul>
                         </div>
 
                         <!-- معلومات التوصيل والتركيب -->
                         <div class="detail-section">
                             <h4><i class="fa fa-truck"></i> التوصيل والتركيب</h4>
-                            <p id="deliveryInfo">✓ يتم تحميل تفاصيل التوصيل الخاصة بالمنتج.</p>
+                            <p id="deliveryInfo">
+                                <span class="skeleton skeleton-line" aria-hidden="true"></span>
+                                <span class="skeleton skeleton-line short" aria-hidden="true"></span>
+                            </p>
                         </div>
 
                         <!-- الضمان -->
                         <div class="detail-section">
                             <h4><i class="fa fa-shield-halved"></i> الضمان وخدمة ما بعد البيع</h4>
                             <div id="warrantyInfo">
-                                <p>يتم تحديث معلومات الضمان بناءً على بيانات المنتج.</p>
+                                <p><span class="skeleton skeleton-line" aria-hidden="true"></span></p>
+                                <p><span class="skeleton skeleton-line short" aria-hidden="true"></span></p>
                             </div>
                         </div>
                     </div>
