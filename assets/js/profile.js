@@ -1304,16 +1304,16 @@ function editProfile() {
 
 // Bind click actions for order row icon shortcuts
 function setupOrderActions() {
-    const ordersContainer = document.getElementById('ordersTableBody');
+    const ordersContainer = document.getElementById('ordersGrid');
     if (!ordersContainer) return;
 
     ordersContainer.onclick = async function(event) {
-        const actionIcon = event.target.closest('.action-icon');
-        if (!actionIcon) return;
+        const actionBtn = event.target.closest('.action-btn');
+        if (!actionBtn) return;
 
-        const action = actionIcon.dataset.action;
-        const row = actionIcon.closest('tr');
-        const orderId = row?.dataset.orderId;
+        const action = actionBtn.dataset.action;
+        const card = actionBtn.closest('.order-card');
+        const orderId = card?.dataset.orderId;
 
         if (!orderId) {
             return;
@@ -1324,9 +1324,7 @@ function setupOrderActions() {
                 await handleViewOrder(orderId);
                 break;
             case 'cancel':
-                await handleCancelOrder(orderId, row);
-                break;
-            default:
+                await handleCancelOrder(orderId, card);
                 break;
         }
     };
@@ -1660,6 +1658,7 @@ function renderStatusBadge(order) {
         'out-for-delivery': 'out-for-delivery',
         'status-out-for-delivery': 'out-for-delivery',
         'status_out_for_delivery': 'out-for-delivery',
+        'status_out_for_delivery': 'out-for-delivery',
         'out_for_delivery': 'out-for-delivery',
         'ready-for-delivery': 'out-for-delivery',
         'in-transit': 'out-for-delivery',
@@ -1890,23 +1889,68 @@ function resolveOrderItemQuantity(item) {
 }
 
 async function loadUserOrders() {
-    const tableBody = document.getElementById('ordersTableBody');
-    if (!tableBody) return;
+const ordersGrid = document.getElementById('ordersGrid');
+if (!ordersGrid) return;
 
-    updateOrderStatsDisplay(0, 0);
+updateOrderStatsDisplay(0, 0);
 
-    const loadingHtml = `
-        <tr class="orders-loading-row">
-            <td colspan="5">
-                <div class="orders-loading">
-                    <i class="fa fa-spinner fa-spin"></i>
-                    <span>جاري تحميل الطلبات...</span>
-                </div>
-            </td>
-        </tr>
-    `;
-    safeSetHTML(tableBody, loadingHtml);
+const loadingHtml = `
+<div class="order-card skeleton-card">
+<div class="order-card-header">
+<div class="order-number">
+<span class="skeleton skeleton-text"></span>
+</div>
+<div class="order-status">
+<span class="skeleton skeleton-pill"></span>
+</div>
+</div>
+<div class="order-card-body">
+<div class="order-info-grid">
+<div class="order-info-item">
+<div class="info-label">
+<span class="skeleton skeleton-text-small"></span>
+</div>
+<div class="info-value">
+<span class="skeleton skeleton-text"></span>
+</div>
+</div>
+<div class="order-info-item">
+<div class="info-label">
+<span class="skeleton skeleton-text-small"></span>
+</div>
+<div class="info-value">
+<span class="skeleton skeleton-text"></span>
+</div>
+</div>
+<div class="order-info-item">
+<div class="info-label">
+<span class="skeleton skeleton-text-small"></span>
+</div>
+<div class="info-value">
+<span class="skeleton skeleton-text"></span>
+</div>
+</div>
+<div class="order-info-item">
+<div class="info-label">
+<span class="skeleton skeleton-text-small"></span>
+</div>
+<div class="info-value">
+<span class="skeleton skeleton-text"></span>
+</div>
+</div>
+</div>
+</div>
+<div class="order-card-footer">
+<div class="order-actions">
+<span class="skeleton skeleton-button"></span>
+<span class="skeleton skeleton-button"></span>
+</div>
+</div>
+</div>
+`;
 
+// Show multiple skeleton cards
+safeSetHTML(ordersGrid, loadingHtml.repeat(3));
     try {
         const endpoint = window.API_CONFIG?.getEndpoint('ORDERS_MY') || 'https://action-sports-api.vercel.app/api/orders/me';
         
@@ -1914,7 +1958,7 @@ async function loadUserOrders() {
         const data = await getJson(endpoint);
 
         if (!data) {
-            safeSetHTML(tableBody, renderOrdersEmptyState('لم تقم بأي طلبات بعد.'));
+            safeSetHTML(ordersGrid, renderOrdersEmptyState('لم تقم بأي طلبات بعد.'));
             updateOrderStatsDisplay(0, 0);
             return;
         }
@@ -1922,7 +1966,7 @@ async function loadUserOrders() {
         const orders = Array.isArray(data?.data) ? data.data : Array.isArray(data) ? data : [];
 
         if (!orders.length) {
-            safeSetHTML(tableBody, renderOrdersEmptyState('لم تقم بأي طلبات بعد.'));
+            safeSetHTML(ordersGrid, renderOrdersEmptyState('لم تقم بأي طلبات بعد.'));
             updateOrderStatsDisplay(0, 0);
             return;
         }
@@ -1936,27 +1980,30 @@ async function loadUserOrders() {
 
         updateOrderStatsDisplay(orders.length, totalItemsPurchased);
 
-        // Render rows without double-sanitizing the entire content
-        const ordersHtml = orders.map((order, index) => renderOrderRow(order, index)).join('');
-        safeSetHTML(tableBody, ordersHtml);
+        // Render cards without double-sanitizing the entire content
+        const ordersHtml = orders.map((order, index) => renderOrderCard(order, index)).join('');
+        safeSetHTML(ordersGrid, ordersHtml);
     } catch (error) {
         const messageText = (error.message || '').toLowerCase();
         const noOrdersMessages = ['no orders', "you didn't create any order", 'لم يتم العثور على طلبات', 'لا يوجد طلبات'];
         const isNoOrders = noOrdersMessages.some(token => messageText.includes(token));
-        safeSetHTML(tableBody, renderOrdersEmptyState(isNoOrders ? 'لم تقم بأي طلبات بعد.' : 'حدث خطأ أثناء تحميل الطلبات. يرجى المحاولة لاحقاً.'));
+        safeSetHTML(ordersGrid, renderOrdersEmptyState(isNoOrders ? 'لم تقم بأي طلبات بعد.' : 'حدث خطأ أثناء تحميل الطلبات. يرجى المحاولة لاحقاً.'));
         updateOrderStatsDisplay(0, 0);
     }
 }
 
 function renderOrdersEmptyState(message) {
     return `
-        <tr>
-            <td colspan="5" class="orders-empty">${sanitizeHtmlContent(message)}</td>
-        </tr>
+        <div class="order-card empty-state">
+            <div class="empty-state-content">
+                <i class="fa fa-shopping-bag empty-icon"></i>
+                <p class="empty-message">${sanitizeHtmlContent(message)}</p>
+            </div>
+        </div>
     `;
 }
 
-function renderOrderRow(order, index = 0) {
+function renderOrderCard(order, index = 0) {
     const createdAt = formatOrderDate(order.createdAt || order.orderDate);
     const total = Number(order.totalOrderPrice || order.total || 0).toLocaleString('ar-EG');
     const statusBadge = renderStatusBadge(order);
@@ -1965,17 +2012,151 @@ function renderOrderRow(order, index = 0) {
     const orderNumber = index + 1;
 
     return `
-        <tr data-order-id="${sanitizeHtmlContent(order._id || order.id || '')}">
-            <td>${orderNumber}</td>
-            <td>${sanitizeHtmlContent(createdAt)}</td>
-            <td>${sanitizeHtmlContent(total)} ${currencyIcon}</td>
-            <td>${statusBadge}</td>
-            <td class="order-actions">
-                <span class="action-icon" data-action="view" title="عرض التفاصيل"><i class="fa fa-eye"></i></span>
-                ${canCancel ? `<span class="action-icon" data-action="cancel" title="إلغاء الطلب"><i class="fa fa-times"></i></span>` : ''}
-            </td>
-        </tr>
+        <div class="order-card" data-order-id="${sanitizeHtmlContent(order._id || order.id || '')}">
+            <div class="order-card-header">
+                <div class="order-number">
+                    <div class="sequence">${orderNumber}</div>
+                    <div class="order-id">طلب #${order._id ? order._id.slice(-8) : 'N/A'}</div>
+                </div>
+                <div class="order-status">
+                    ${statusBadge}
+                </div>
+            </div>
+            <div class="order-card-body">
+                <div class="order-info-grid">
+                    <div class="order-info-item">
+                        <div class="info-label">
+                            <i class="fa fa-calendar"></i>
+                            التاريخ
+                        </div>
+                        <div class="info-value date">${sanitizeHtmlContent(createdAt)}</div>
+                    </div>
+                    <div class="order-info-item">
+                        <div class="info-label">
+                            <i class="fa fa-money-bill-wave"></i>
+                            الإجمالي
+                        </div>
+                        <div class="info-value price">${sanitizeHtmlContent(total)} ${currencyIcon}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="order-card-footer">
+                <div class="order-actions">
+                    <button class="action-btn view" data-action="view" title="عرض التفاصيل">
+                        <i class="fa fa-eye"></i>
+                        عرض
+                    </button>
+                    ${canCancel ? `
+                        <button class="action-btn cancel" data-action="cancel" title="إلغاء الطلب">
+                            <i class="fa fa-times"></i>
+                            إلغاء
+                        </button>
+                    ` : ''}
+                </div>
+            </div>
+        </div>
     `;
+}
+
+function getStatusText(order) {
+    // Check for cancelled status first (highest priority)
+    if (order?.isCanceled || order?.cancelledAt || order?.cancelled || order?.isArchived) {
+        return 'ملغي';
+    }
+
+    const statusMap = {
+        new: 'جديد',
+        pending: 'قيد المعالجة',
+        processing: 'قيد التجهيز',
+        paid: 'تم السداد',
+        shipped: 'تم الشحن',
+        'out-for-delivery': 'قيد التوصيل',
+        delivered: 'تم التوصيل',
+        cancelled: 'ملغي'
+    };
+
+    const aliasMap = {
+        new: 'new',
+        'جديد': 'new',
+        created: 'new',
+        placed: 'new',
+        pending: 'pending',
+        'status-pending': 'pending',
+        'status_pending': 'pending',
+        'قيد-المعالجة': 'pending',
+        'قيد المعالجة': 'pending',
+        processing: 'processing',
+        'status-processing': 'processing',
+        'status_processing': 'processing',
+        'processing-order': 'processing',
+        'in-progress': 'processing',
+        'under-processing': 'processing',
+        'under-preparation': 'processing',
+        'under_preparation': 'processing',
+        preparing: 'processing',
+        'قيد-التجهيز': 'processing',
+        'قيد التجهيز': 'processing',
+        paid: 'paid',
+        'status-paid': 'paid',
+        'status_paid': 'paid',
+        'تم-السداد': 'paid',
+        'تم السداد': 'paid',
+        shipped: 'shipped',
+        'status-shipped': 'shipped',
+        'status_shipped': 'shipped',
+        'تم-الشحن': 'shipped',
+        'تم الشحن': 'shipped',
+        'out-for-delivery': 'out-for-delivery',
+        'status-out-for-delivery': 'out-for-delivery',
+        'status_out_for_delivery': 'out-for-delivery',
+        'status_out_for_delivery': 'out-for-delivery',
+        'out_for_delivery': 'out-for-delivery',
+        'ready-for-delivery': 'out-for-delivery',
+        'in-transit': 'out-for-delivery',
+        'on-the-way': 'out-for-delivery',
+        'قيد-التوصيل': 'out-for-delivery',
+        'قيد التوصيل': 'out-for-delivery',
+        delivered: 'delivered',
+        'status-delivered': 'delivered',
+        'status_delivered': 'delivered',
+        completed: 'delivered',
+        'تم-التوصيل': 'delivered',
+        'تم التوصيل': 'delivered',
+        cancelled: 'cancelled',
+        'status-cancelled': 'cancelled',
+        'status_cancelled': 'cancelled',
+        canceled: 'cancelled',
+        'ملغي': 'cancelled'
+    };
+
+    const statusCandidates = [
+        order?.deliveryStatus,
+        order?.status,
+        order?.status?.current,
+        order?.status?.value,
+        order?.status?.status,
+        order?.orderStatus,
+        order?.currentStatus,
+        order?.statusText,
+        order?.state
+    ];
+
+    const rawStatus = statusCandidates.find(value => typeof value === 'string' && value.trim()) || '';
+
+    const normalizeStatus = (value) => {
+        if (!value) return '';
+        const stringValue = String(value).trim();
+        if (!stringValue) return '';
+        const slug = stringValue.toLowerCase().replace(/[_\s]+/g, '-');
+        return aliasMap[slug] || aliasMap[stringValue] || slug;
+    };
+
+    const fallbackStatus =
+        order?.deliveryStatus ||
+        (order?.isDelivered ? 'delivered' : order?.isPaid ? 'paid' : '');
+
+    const normalizedStatus = normalizeStatus(rawStatus) || normalizeStatus(fallbackStatus) || 'pending';
+    return statusMap[normalizedStatus] || statusMap.pending;
 }
 
 async function handleViewOrder(orderId) {

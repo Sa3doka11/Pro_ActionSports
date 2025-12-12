@@ -64,44 +64,44 @@ function initContactForm() {
 const AUTH_USER_STORAGE_KEY = 'actionSportsAuthUser';
 
 const AUTH_ENDPOINTS = {
-    signIn: window.API_CONFIG?.getEndpoint('AUTH_LOGIN') || 'https://action-sports-api.vercel.app/api/auth/sign-in',
-    signUp: window.API_CONFIG?.getEndpoint('AUTH_SIGNUP') || 'https://action-sports-api.vercel.app/api/auth/sign-up',
-    forgotPassword: window.API_CONFIG?.getEndpoint('AUTH_FORGOT_PASSWORD') || 'https://action-sports-api.vercel.app/api/auth/forgot-password',
-    verifyResetCode: window.API_CONFIG?.getEndpoint('AUTH_VERIFY_RESET_CODE') || 'https://action-sports-api.vercel.app/api/auth/verify-reset-code',
-    resetPassword: window.API_CONFIG?.getEndpoint('AUTH_RESET_PASSWORD') || 'https://action-sports-api.vercel.app/api/auth/reset-password',
-    verifyAccount: window.API_CONFIG?.getEndpoint('AUTH_VERIFY_ACCOUNT') || 'https://action-sports-api.vercel.app/api/auth/verify-account',
-    resendVerificationCode: window.API_CONFIG?.getEndpoint('AUTH_RESEND_VERIFICATION') || 'https://action-sports-api.vercel.app/api/auth/resend-verification-code',
-    tokenRefresh: window.API_CONFIG?.getEndpoint('AUTH_TOKEN_REFRESH') || 'https://action-sports-api.vercel.app/api/auth/token/refresh',
-    logout: window.API_CONFIG?.getEndpoint('AUTH_LOGOUT') || 'https://action-sports-api.vercel.app/api/auth/logout'
+    signIn: window.API_CONFIG?.getEndpoint('AUTH_LOGIN'),
+    signUp: window.API_CONFIG?.getEndpoint('AUTH_SIGNUP'),
+    forgotPassword: window.API_CONFIG?.getEndpoint('AUTH_FORGOT_PASSWORD'),
+    verifyResetCode: window.API_CONFIG?.getEndpoint('AUTH_VERIFY_RESET_CODE'),
+    resetPassword: window.API_CONFIG?.getEndpoint('AUTH_RESET_PASSWORD'),
+    verifyAccount: window.API_CONFIG?.getEndpoint('AUTH_VERIFY_ACCOUNT'),
+    resendVerificationCode: window.API_CONFIG?.getEndpoint('AUTH_RESEND_VERIFICATION'),
+    tokenRefresh: window.API_CONFIG?.getEndpoint('AUTH_TOKEN_REFRESH'),
+    logout: window.API_CONFIG?.getEndpoint('AUTH_LOGOUT')
 };
 
-const CONTACT_FORM_ENDPOINT = window.API_CONFIG?.getEndpoint('CONTACT_FORM') || 'https://action-sports-api.vercel.app/api/messages';
+const CONTACT_FORM_ENDPOINT = window.API_CONFIG?.getEndpoint('CONTACT_FORM');
 
 const USER_ENDPOINTS = {
-    me: window.API_CONFIG?.getEndpoint('USER_ME') || 'https://action-sports-api.vercel.app/api/users/me',
-    changePassword: window.API_CONFIG?.getEndpoint('USER_CHANGE_PASSWORD') || 'https://action-sports-api.vercel.app/api/users/me/change-password',
-    updateAccount: window.API_CONFIG?.getEndpoint('USER_UPDATE_ACCOUNT') || 'https://action-sports-api.vercel.app/api/users/me/update-account',
-    deactivateAccount: window.API_CONFIG?.getEndpoint('USER_DEACTIVATE') || 'https://action-sports-api.vercel.app/api/users/me/deactivate-account',
-    addresses: window.API_CONFIG?.getEndpoint('USER_ADDRESSES') || 'https://action-sports-api.vercel.app/api/users/me/addresses',
-    addressById: (id) => `${window.API_CONFIG?.getEndpoint('USER_ADDRESSES') || 'https://action-sports-api.vercel.app/api/users/me/addresses'}/${id}`
+    me: window.API_CONFIG?.getEndpoint('USER_ME'),
+    changePassword: window.API_CONFIG?.getEndpoint('USER_CHANGE_PASSWORD'),
+    updateAccount: window.API_CONFIG?.getEndpoint('USER_UPDATE_ACCOUNT'),
+    deactivateAccount: window.API_CONFIG?.getEndpoint('USER_DEACTIVATE'),
+    addresses: window.API_CONFIG?.getEndpoint('USER_ADDRESSES'),
+    addressById: (id) => window.API_CONFIG?.buildEndpoint('USER_ADDRESSES', { id })
 };
 
 const ORDER_ENDPOINTS = {
-    create: () => window.API_CONFIG?.getEndpoint('ORDERS_CREATE') || 'https://action-sports-api.vercel.app/api/orders',
-    getAll: () => window.API_CONFIG?.getEndpoint('ORDERS_LIST') || 'https://action-sports-api.vercel.app/api/orders',
-    getById: (id) => `${window.API_CONFIG?.getEndpoint('ORDERS_LIST') || 'https://action-sports-api.vercel.app/api/orders'}/${id}`,
-    getMyOrders: () => window.API_CONFIG?.getEndpoint('ORDERS_MY') || 'https://action-sports-api.vercel.app/api/orders/me',
-    deliver: (id) => `${window.API_CONFIG?.getEndpoint('ORDERS_LIST') || 'https://action-sports-api.vercel.app/api/orders'}/${id}/deliver`,
-    cancel: (id) => `${window.API_CONFIG?.getEndpoint('ORDERS_LIST') || 'https://action-sports-api.vercel.app/api/orders'}/${id}/cancel`
+    create: () => window.API_CONFIG?.getEndpoint('ORDERS_CREATE'),
+    getAll: () => window.API_CONFIG?.getEndpoint('ORDERS_LIST'),
+    getById: (id) => window.API_CONFIG?.buildEndpoint('ORDERS_LIST', { id }),
+    getMyOrders: () => window.API_CONFIG?.getEndpoint('ORDERS_MY'),
+    deliver: (id) => window.API_CONFIG?.buildEndpoint('ORDERS_LIST', { id }) + '/deliver',
+    cancel: (id) => window.API_CONFIG?.buildEndpoint('ORDERS_LIST', { id }) + '/cancel'
 };
 
 const SHIPPING_ENDPOINTS = {
-    zones: window.API_CONFIG?.getEndpoint('SHIPPING_ZONES') || 'https://action-sports-api.vercel.app/api/shipping-zones'
+    zones: window.API_CONFIG?.getEndpoint('SHIPPING_ZONES')
 };
 
 const BANNERS_ENDPOINTS = {
-    publicList: window.API_CONFIG?.getEndpoint('BANNERS_PUBLIC') || 'https://action-sports-api.vercel.app/api/public/banners',
-    list: window.API_CONFIG?.getEndpoint('BANNERS_LIST') || 'https://action-sports-api.vercel.app/api/banners'
+    publicList: window.API_CONFIG?.getEndpoint('BANNERS_PUBLIC'),
+    list: window.API_CONFIG?.getEndpoint('BANNERS_LIST')
 };
 
 const homepageBannerState = {
@@ -441,11 +441,11 @@ if (typeof window !== 'undefined') {
 }
 
 const CART_ENDPOINTS = {
-    base: window.API_CONFIG?.getEndpoint('CART_BASE') || 'https://action-sports-api.vercel.app/api/cart',
-    add: window.API_CONFIG?.getEndpoint('CART_ADD') || 'https://action-sports-api.vercel.app/api/cart',
-    list: window.API_CONFIG?.getEndpoint('CART_LIST') || 'https://action-sports-api.vercel.app/api/cart',
-    clear: window.API_CONFIG?.getEndpoint('CART_CLEAR') || 'https://action-sports-api.vercel.app/api/cart/clear',
-    item: (itemId) => `${window.API_CONFIG?.getEndpoint('CART_LIST') || 'https://action-sports-api.vercel.app/api/cart'}/${itemId}`
+    base: window.API_CONFIG?.getEndpoint('CART_BASE'),
+    add: window.API_CONFIG?.getEndpoint('CART_ADD'),
+    list: window.API_CONFIG?.getEndpoint('CART_LIST'),
+    clear: window.API_CONFIG?.getEndpoint('CART_CLEAR'),
+    item: (itemId) => window.API_CONFIG?.buildEndpoint('CART_LIST', { itemId })
 };
 
 const FALLBACK_IMAGE = 'assets/images/product1.png';
@@ -1204,6 +1204,296 @@ function safeSetText(element, text) {
     element.textContent = typeof text === 'string' ? text : String(text || '');
 }
 
+const globalErrorPopupState = {
+    container: null,
+    retryButton: null,
+    lastRetryHandler: null,
+    styleInjected: false
+};
+
+function injectGlobalErrorPopupStyles() {
+    if (globalErrorPopupState.styleInjected || typeof document === 'undefined') return;
+
+    const applyStyles = () => {
+        if (document.getElementById('globalErrorPopupStyles')) {
+            globalErrorPopupState.styleInjected = true;
+            return;
+        }
+
+        const style = document.createElement('style');
+        style.id = 'globalErrorPopupStyles';
+        style.textContent = `
+            #globalErrorPopup {
+                position: fixed;
+                inset: 0;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background: rgb(2 13 28);
+                opacity: 0;
+                visibility: hidden;
+                pointer-events: none;
+                transition: opacity 0.35s ease, visibility 0.35s ease;
+                z-index: 9999;
+                padding: 20px;
+                direction: rtl;
+            }
+
+            #globalErrorPopup.hidden {
+                opacity: 0;
+                visibility: hidden;
+                pointer-events: none;
+            }
+
+            #globalErrorPopup.active {
+                opacity: 1;
+                visibility: visible;
+                pointer-events: auto;
+            }
+
+            #globalErrorPopup .error-box {
+                background: #141414;
+                color: #ffffff;
+                padding: 32px 28px;
+                border-radius: 12px;
+                width: min(420px, 100%);
+                text-align: center;
+                box-shadow: 0 24px 48px rgba(0, 0, 0, 0.5);
+                transform: translateY(40px);
+                animation: globalErrorSlideUp 0.4s ease forwards;
+                font-family: inherit;
+            }
+
+            #globalErrorPopup .error-box h2 {
+                margin: 0 0 12px;
+                font-size: 1.4rem;
+                font-weight: 700;
+            }
+
+            #globalErrorPopup .error-box p {
+                margin: 0 0 20px;
+                font-size: 1rem;
+                line-height: 1.6;
+            }
+
+            #globalErrorRetryBtn {
+                background-color: #e50914;
+                border: none;
+                color: #ffffff;
+                padding: 12px 24px;
+                border-radius: 999px;
+                cursor: pointer;
+                font-size: 1rem;
+                font-weight: 600;
+                transition: background-color 0.2s ease, transform 0.2s ease;
+                width: 100%;
+                max-width: 240px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                gap: 8px;
+            }
+
+            #globalErrorRetryBtn:hover,
+            #globalErrorRetryBtn:focus {
+                background-color: #f40612;
+                transform: translateY(-1px);
+                outline: none;
+            }
+
+            @keyframes globalErrorSlideUp {
+                from {
+                    opacity: 0;
+                    transform: translateY(30px);
+                }
+
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+        `;
+
+        document.head.appendChild(style);
+        globalErrorPopupState.styleInjected = true;
+    };
+
+    if (document.head) {
+        applyStyles();
+    } else {
+        document.addEventListener('DOMContentLoaded', applyStyles, { once: true });
+    }
+}
+
+function ensureGlobalErrorPopupElement() {
+    if (typeof document === 'undefined') return null;
+
+    if (!document.body) {
+        document.addEventListener('DOMContentLoaded', ensureGlobalErrorPopupElement, { once: true });
+        return null;
+    }
+
+    injectGlobalErrorPopupStyles();
+
+    if (globalErrorPopupState.container && document.body.contains(globalErrorPopupState.container)) {
+        return globalErrorPopupState.container;
+    }
+
+    let container = document.getElementById('globalErrorPopup');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'globalErrorPopup';
+        container.className = 'global-error-overlay hidden';
+        container.setAttribute('dir', 'rtl');
+        container.setAttribute('role', 'alertdialog');
+        container.setAttribute('aria-modal', 'true');
+        container.setAttribute('aria-hidden', 'true');
+        container.innerHTML = `
+  <div class="error-box">
+      <h2>⚠ مشكلة في الاتصال بالخادم</h2>
+      <p>يبدو أن هناك مشكلة في السيرفر. يرجى المحاولة مرة أخرى.</p>
+      <button id="globalErrorRetryBtn" type="button">إعادة المحاولة </button>
+  </div>
+        `;
+        document.body.appendChild(container);
+    } else {
+        container.classList.add('global-error-overlay');
+        if (!container.classList.contains('hidden')) {
+            container.classList.add('hidden');
+        }
+    }
+
+    const retryButton = container.querySelector('#globalErrorRetryBtn');
+    if (retryButton && !retryButton.dataset.globalErrorBound) {
+        retryButton.dataset.globalErrorBound = 'true';
+        retryButton.addEventListener('click', async () => {
+            const handler = globalErrorPopupState.lastRetryHandler;
+            globalErrorPopupState.lastRetryHandler = null;
+            hideGlobalErrorPopup();
+
+            if (typeof handler === 'function') {
+                try {
+                    await handler();
+                } catch (error) {
+                    if (!error || error.name !== 'AbortError') {
+                        showGlobalErrorPopup(handler);
+                    }
+                }
+            }
+        });
+    }
+
+    globalErrorPopupState.container = container;
+    globalErrorPopupState.retryButton = retryButton;
+
+    return container;
+}
+
+function showGlobalErrorPopup(handler) {
+    if (typeof document === 'undefined') return;
+
+    globalErrorPopupState.lastRetryHandler = typeof handler === 'function' ? handler : null;
+
+    const container = ensureGlobalErrorPopupElement();
+    if (!container) {
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => showGlobalErrorPopup(handler), { once: true });
+        }
+        return;
+    }
+
+    container.classList.remove('hidden');
+    container.classList.add('active');
+    container.setAttribute('aria-hidden', 'false');
+
+    if (globalErrorPopupState.retryButton) {
+        setTimeout(() => {
+            try {
+                globalErrorPopupState.retryButton.focus();
+            } catch (focusError) {
+            }
+        }, 60);
+    }
+}
+
+function hideGlobalErrorPopup() {
+    if (typeof document === 'undefined') return;
+
+    const container = ensureGlobalErrorPopupElement();
+    if (!container) return;
+
+    container.classList.remove('active');
+    container.classList.add('hidden');
+    container.setAttribute('aria-hidden', 'true');
+}
+
+function normalizeHeaders(headers = {}) {
+    if (typeof Headers !== 'undefined' && headers instanceof Headers) {
+        const headerObject = {};
+        headers.forEach((value, key) => {
+            headerObject[key] = value;
+        });
+        return headerObject;
+    }
+    return { ...headers };
+}
+
+function cloneFetchOptions(options = {}) {
+    const cloned = { ...options };
+    if (options.headers) {
+        cloned.headers = normalizeHeaders(options.headers);
+    }
+    return cloned;
+}
+
+function createRetryHandler(url, options = {}) {
+    return () => apiFetch(url, cloneFetchOptions(options));
+}
+
+async function parseJsonSafely(response, retryHandler) {
+    if (!response) return {};
+
+    const statusCode = Number(response.status || 0);
+    if (statusCode === 204 || statusCode === 205) {
+        return {};
+    }
+
+    const headers = response.headers;
+    const contentLength = headers && typeof headers.get === 'function' ? headers.get('content-length') : null;
+    if (contentLength === '0') {
+        return {};
+    }
+
+    try {
+        return await response.json();
+    } catch (error) {
+        if (typeof retryHandler === 'function') {
+            showGlobalErrorPopup(retryHandler);
+        } else {
+            showGlobalErrorPopup();
+        }
+
+        if (typeof console !== 'undefined' && typeof console.error === 'function') {
+            console.error('Failed to parse JSON response', error);
+        }
+
+        return {};
+    }
+}
+
+if (typeof window !== 'undefined') {
+    window.showGlobalErrorPopup = showGlobalErrorPopup;
+    window.hideGlobalErrorPopup = hideGlobalErrorPopup;
+}
+
+if (typeof document !== 'undefined') {
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', ensureGlobalErrorPopupElement, { once: true });
+    } else {
+        ensureGlobalErrorPopupElement();
+    }
+}
+
 // ===================================================================
 // API REQUEST WRAPPERS WITH 401 REFRESH LOGIC
 // ===================================================================
@@ -1263,7 +1553,7 @@ async function ensureCookiesReady() {
         const checkCookies = async () => {
             try {
                 const response = await fetch(
-                    window.API_CONFIG?.getEndpoint('USER_ME') || 'https://action-sports-api.vercel.app/api/users/me',
+                    window.API_CONFIG?.getEndpoint('USER_ME'),
                     {
                         method: 'GET',
                         credentials: 'include',
@@ -1303,7 +1593,7 @@ async function refreshAccessToken() {
 
     isRefreshing = true;
     refreshAttemptCount++;
-    const refreshUrl = window.API_CONFIG?.getEndpoint('AUTH_TOKEN_REFRESH') || AUTH_ENDPOINTS.tokenRefresh;
+    const refreshUrl = window.API_CONFIG?.getEndpoint('AUTH_TOKEN_REFRESH');
 
     refreshPromise = fetch(refreshUrl, {
         method: 'POST',
@@ -1338,33 +1628,51 @@ async function apiFetch(url, options = {}) {
     // ✅ CRITICAL: Wait for cookies to be ready BEFORE making any request
     // This prevents 401 errors from race conditions where cookies aren't set yet
     await ensureCookiesReady();
-    
+
+    const normalizedOptions = cloneFetchOptions(options);
+    const providedRetryHandler = typeof normalizedOptions.__retryHandler === 'function'
+        ? normalizedOptions.__retryHandler
+        : null;
+    if (Object.prototype.hasOwnProperty.call(normalizedOptions, '__retryHandler')) {
+        delete normalizedOptions.__retryHandler;
+    }
     const headers = {
         'Content-Type': 'application/json',
-        ...options.headers
+        ...normalizedOptions.headers
     };
-    
-    let response = await fetch(url, {
+
+    const requestOptions = {
+        ...normalizedOptions,
         credentials: 'include',  // ✅ Browser سيبعت httpOnly cookies تلقائياً (accessToken + refreshToken)
-        ...options,
         headers
-    });
+    };
+
+    const retryHandler = providedRetryHandler || createRetryHandler(url, requestOptions);
+
+    let response;
+
+    try {
+        response = await fetch(url, requestOptions);
+    } catch (error) {
+        showGlobalErrorPopup(retryHandler);
+        throw error;
+    }
 
     // If 401, try refresh (but NOT on /auth/token/refresh itself to avoid infinite loop)
     if (response.status === 401 && !url.includes('/auth/token/refresh') && cookiesReady) {
         try {
             await refreshAccessToken();
-            
+
             // أعد محاولة الطلب بنفس الطريقة - لكن الآن مع التوكن الجديد في httpOnly cookie
-            response = await fetch(url, {
-                credentials: 'include',  // ✅ Browser سيبعت التوكن المحدث من httpOnly cookie
-                ...options,
-                headers
-            });
+            response = await fetch(url, requestOptions);
         } catch (refreshError) {
             // Refresh failed - don't auto-logout here
             // Let the calling function handle it
         }
+    }
+
+    if (!response.ok && (response.status >= 500 || response.status === 0)) {
+        showGlobalErrorPopup(retryHandler);
     }
 
     return response;
@@ -1372,12 +1680,14 @@ async function apiFetch(url, options = {}) {
 
 // طلب POST عام مع معالجة أخطاء موحدة وتحديث تلقائي للـ token
 async function postJson(url, data) {
+    const retryHandler = () => postJson(url, data);
     const response = await apiFetch(url, {
         method: 'POST',
-        body: JSON.stringify(data)
+        body: JSON.stringify(data),
+        __retryHandler: retryHandler
     });
 
-    const payload = await response.json().catch(() => ({}));
+    const payload = await parseJsonSafely(response, retryHandler);
     if (!response.ok) {
         const message = payload?.message || 'حدث خطأ غير متوقع';
         const errors = payload?.errors || null;
@@ -1392,12 +1702,14 @@ async function postJson(url, data) {
 
 // طلب PATCH عام مع دعم التحديث التلقائي
 async function patchJson(url, data) {
+    const retryHandler = () => patchJson(url, data);
     const response = await apiFetch(url, {
         method: 'PATCH',
-        body: JSON.stringify(data)
+        body: JSON.stringify(data),
+        __retryHandler: retryHandler
     });
 
-    const payload = await response.json().catch(() => ({}));
+    const payload = await parseJsonSafely(response, retryHandler);
     if (!response.ok) {
         const message = payload?.message || 'حدث خطأ غير متوقع';
         const errors = payload?.errors || null;
@@ -1412,11 +1724,13 @@ async function patchJson(url, data) {
 
 // طلب GET عام مع دعم التحديث التلقائي
 async function getJson(url) {
+    const retryHandler = () => getJson(url);
     const response = await apiFetch(url, {
-        method: 'GET'
+        method: 'GET',
+        __retryHandler: retryHandler
     });
 
-    const payload = await response.json().catch(() => ({}));
+    const payload = await parseJsonSafely(response, retryHandler);
     if (!response.ok) {
         // Don't throw error for 401 on startup - user just not logged in
         if (response.status === 401 && (url.includes('/users/me') || url.includes('users'))) {
@@ -1430,9 +1744,10 @@ async function getJson(url) {
                 await refreshAccessToken();
                 // أعد المحاولة مرة واحدة فقط
                 const retryResponse = await apiFetch(url, {
-                    method: 'GET'
+                    method: 'GET',
+                    __retryHandler: retryHandler
                 });
-                const retryPayload = await retryResponse.json().catch(() => ({}));
+                const retryPayload = await parseJsonSafely(retryResponse, retryHandler);
                 if (retryResponse.ok) {
                     return retryPayload;
                 }
@@ -1453,11 +1768,13 @@ async function getJson(url) {
 
 // طلب DELETE عام مع دعم التحديث التلقائي
 async function deleteJson(url) {
+    const retryHandler = () => deleteJson(url);
     const response = await apiFetch(url, {
-        method: 'DELETE'
+        method: 'DELETE',
+        __retryHandler: retryHandler
     });
 
-    const payload = await response.json().catch(() => ({}));
+    const payload = await parseJsonSafely(response, retryHandler);
     if (!response.ok) {
         const message = payload?.message || 'حدث خطأ غير متوقع';
         const errors = payload?.errors || null;
@@ -2169,7 +2486,7 @@ function handleProtectedPageAccess() {
 // تنفيذ إجراءات تسجيل الخروج وتحديث الواجهة
 async function handleLogout() {
     try {
-        const logoutUrl = window.API_CONFIG?.getEndpoint('AUTH_LOGOUT') || AUTH_ENDPOINTS.logout;
+        const logoutUrl = window.API_CONFIG?.getEndpoint('AUTH_LOGOUT');
         await postJson(logoutUrl, {});
     } catch (error) {
         // Continue logout even if endpoint fails
@@ -3130,7 +3447,7 @@ document.addEventListener('auth:user-updated', () => {
             return;
         }
 
-        const endpoint = window.API_CONFIG?.getEndpoint('CATEGORIES') || 'https://action-sports-api.vercel.app/api/categories';
+        const endpoint = window.API_CONFIG?.getEndpoint('CATEGORIES');
         try {
             // ✅ استخدم getJson - تتعامل مع credentials: 'include'
             const payload = await getJson(endpoint);
@@ -3277,7 +3594,7 @@ document.addEventListener('auth:user-updated', () => {
         const grid = document.getElementById('latestProductsGrid');
         if (!grid) return;
 
-        const endpoint = (window.API_CONFIG?.getEndpoint('PRODUCTS') || 'https://action-sports-api.vercel.app/api/products') + '?limit=6';
+        const endpoint = window.API_CONFIG?.getEndpoint('PRODUCTS') + '?limit=6';
 
         try {
             // ✅ استخدم getJson - تتعامل مع credentials: 'include'

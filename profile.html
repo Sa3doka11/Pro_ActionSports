@@ -204,55 +204,141 @@
                             <div class="card-icon"><i class="fa fa-shopping-bag"></i></div>
                             <h2 class="card-title">الطلبات السابقة</h2>
                         </div>
-                        <table class="orders-table">
-                            <thead>
-                                <tr>
-                                    <th>التسلسل</th>
-                                    <th>التاريخ</th>
-                                <th>الإجمالي</th>
-                                <th>الحالة</th>
-                                <th>الإجراءات</th>
-                                </tr>
-                            </thead>
-                            <tbody id="ordersTableBody">
-                                <tr class="skeleton-row" aria-hidden="true">
-                                    <td><span class="skeleton skeleton-pill"></span></td>
-                                    <td><span class="skeleton skeleton-pill"></span></td>
-                                    <td><span class="skeleton skeleton-pill"></span></td>
-                                    <td><span class="skeleton skeleton-pill"></span></td>
-                                    <td>
-                                        <div class="skeleton-button-group">
-                                            <span class="skeleton skeleton-button"></span>
-                                            <span class="skeleton skeleton-button"></span>
+                        <div class="orders-grid" id="ordersGrid">
+                            <!-- Skeleton Loading Cards -->
+                            <div class="order-card skeleton-card" aria-hidden="true">
+                                <div class="order-card-header">
+                                    <div class="order-number">
+                                        <span class="skeleton skeleton-text"></span>
+                                    </div>
+                                    <div class="order-status">
+                                        <span class="skeleton skeleton-pill"></span>
+                                    </div>
+                                </div>
+                                <div class="order-card-body">
+                                    <div class="order-info-grid">
+                                        <div class="order-info-item">
+                                            <div class="info-label">
+                                                <span class="skeleton skeleton-text-small"></span>
+                                            </div>
+                                            <div class="info-value">
+                                                <span class="skeleton skeleton-text"></span>
+                                            </div>
                                         </div>
-                                    </td>
-                                </tr>
-                                <tr class="skeleton-row" aria-hidden="true">
-                                    <td><span class="skeleton skeleton-pill"></span></td>
-                                    <td><span class="skeleton skeleton-pill"></span></td>
-                                    <td><span class="skeleton skeleton-pill"></span></td>
-                                    <td><span class="skeleton skeleton-pill"></span></td>
-                                    <td>
-                                        <div class="skeleton-button-group">
-                                            <span class="skeleton skeleton-button"></span>
-                                            <span class="skeleton skeleton-button"></span>
+                                        <div class="order-info-item">
+                                            <div class="info-label">
+                                                <span class="skeleton skeleton-text-small"></span>
+                                            </div>
+                                            <div class="info-value">
+                                                <span class="skeleton skeleton-text"></span>
+                                            </div>
                                         </div>
-                                    </td>
-                                </tr>
-                                <tr class="skeleton-row" aria-hidden="true">
-                                    <td><span class="skeleton skeleton-pill"></span></td>
-                                    <td><span class="skeleton skeleton-pill"></span></td>
-                                    <td><span class="skeleton skeleton-pill"></span></td>
-                                    <td><span class="skeleton skeleton-pill"></span></td>
-                                    <td>
-                                        <div class="skeleton-button-group">
-                                            <span class="skeleton skeleton-button"></span>
-                                            <span class="skeleton skeleton-button"></span>
+                                        <div class="order-info-item">
+                                            <div class="info-label">
+                                                <span class="skeleton skeleton-text-small"></span>
+                                            </div>
+                                            <div class="info-value">
+                                                <span class="skeleton skeleton-text"></span>
+                                            </div>
                                         </div>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
+                                    </div>
+                                </div>
+                                <div class="order-card-footer">
+                                    <div class="order-actions">
+                                        <span class="skeleton skeleton-button"></span>
+                                        <span class="skeleton skeleton-button"></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="order-card skeleton-card" aria-hidden="true">
+                                <div class="order-card-header">
+                                    <div class="order-number">
+                                        <span class="skeleton skeleton-text"></span>
+                                    </div>
+                                    <div class="order-status">
+                                        <span class="skeleton skeleton-pill"></span>
+                                    </div>
+                                </div>
+                                <div class="order-card-body">
+                                    <div class="order-info-grid">
+                                        <div class="order-info-item">
+                                            <div class="info-label">
+                                                <span class="skeleton skeleton-text-small"></span>
+                                            </div>
+                                            <div class="info-value">
+                                                <span class="skeleton skeleton-text"></span>
+                                            </div>
+                                        </div>
+                                        <div class="order-info-item">
+                                            <div class="info-label">
+                                                <span class="skeleton skeleton-text-small"></span>
+                                            </div>
+                                            <div class="info-value">
+                                                <span class="skeleton skeleton-text"></span>
+                                            </div>
+                                        </div>
+                                        <div class="order-info-item">
+                                            <div class="info-label">
+                                                <span class="skeleton skeleton-text-small"></span>
+                                            </div>
+                                            <div class="info-value">
+                                                <span class="skeleton skeleton-text"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="order-card-footer">
+                                    <div class="order-actions">
+                                        <span class="skeleton skeleton-button"></span>
+                                        <span class="skeleton skeleton-button"></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="order-card skeleton-card" aria-hidden="true">
+                                <div class="order-card-header">
+                                    <div class="order-number">
+                                        <span class="skeleton skeleton-text"></span>
+                                    </div>
+                                    <div class="order-status">
+                                        <span class="skeleton skeleton-pill"></span>
+                                    </div>
+                                </div>
+                                <div class="order-card-body">
+                                    <div class="order-info-grid">
+                                        <div class="order-info-item">
+                                            <div class="info-label">
+                                                <span class="skeleton skeleton-text-small"></span>
+                                            </div>
+                                            <div class="info-value">
+                                                <span class="skeleton skeleton-text"></span>
+                                            </div>
+                                        </div>
+                                        <div class="order-info-item">
+                                            <div class="info-label">
+                                                <span class="skeleton skeleton-text-small"></span>
+                                            </div>
+                                            <div class="info-value">
+                                                <span class="skeleton skeleton-text"></span>
+                                            </div>
+                                        </div>
+                                        <div class="order-info-item">
+                                            <div class="info-label">
+                                                <span class="skeleton skeleton-text-small"></span>
+                                            </div>
+                                            <div class="info-value">
+                                                <span class="skeleton skeleton-text"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="order-card-footer">
+                                    <div class="order-actions">
+                                        <span class="skeleton skeleton-button"></span>
+                                        <span class="skeleton skeleton-button"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
