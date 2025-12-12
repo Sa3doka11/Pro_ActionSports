@@ -1467,17 +1467,7 @@ async function parseJsonSafely(response, retryHandler) {
     try {
         return await response.json();
     } catch (error) {
-        if (typeof retryHandler === 'function') {
-            showGlobalErrorPopup(retryHandler);
-        } else {
-            showGlobalErrorPopup();
-        }
-
-        if (typeof console !== 'undefined' && typeof console.error === 'function') {
-            console.error('Failed to parse JSON response', error);
-        }
-
-        return {};
+        throw error;
     }
 }
 
@@ -1654,7 +1644,6 @@ async function apiFetch(url, options = {}) {
     try {
         response = await fetch(url, requestOptions);
     } catch (error) {
-        showGlobalErrorPopup(retryHandler);
         throw error;
     }
 
@@ -1672,7 +1661,7 @@ async function apiFetch(url, options = {}) {
     }
 
     if (!response.ok && (response.status >= 500 || response.status === 0)) {
-        showGlobalErrorPopup(retryHandler);
+        // Allow callers to decide how to surface errors
     }
 
     return response;
