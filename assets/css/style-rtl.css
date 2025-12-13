@@ -1535,13 +1535,17 @@
       }
 
       .header-area .main-nav .logo {
-        color: #232d39;
+        color: #000; /* Make 'Ction' black in light mode */
         font-size: 28px;
         line-height: 80px;
       }
 
       [data-theme="dark"] .header-area .main-nav .logo {
-        color: #fff;
+        color: #fff; /* Make 'Ction' white in dark mode */
+      }
+
+      [data-theme="dark"] .background-header .main-nav .logo {
+        color: #fff !important;
       }
 
       [data-theme="dark"] .header-area .main-nav .logo em {
