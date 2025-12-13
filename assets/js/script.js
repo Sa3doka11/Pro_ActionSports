@@ -2134,33 +2134,52 @@ function initResendOtpButton() {
     if (!resendBtn) return;
     
     resendBtn.addEventListener('click', async () => {
-        const email = accountVerificationState.email || '';
+        const isAccountVerification = !!accountVerificationState.isVerifying;
+        const email = isAccountVerification
+            ? (accountVerificationState.email || '')
+            : (passwordRecoveryState.email || '');
+        const otpMessage = document.getElementById('otpFormMessage');
+
         if (!email) {
+            if (otpMessage && !isAccountVerification) {
+                setMessage(otpMessage, 'تعذر تحديد البريد المرتبط بالطلب.', 'error');
+            }
             return;
         }
-        
+
+        let timerStarted = false;
+
         try {
             resendBtn.disabled = true;
             resendBtn.textContent = 'جاري الإرسال...';
             
-            await handleResendVerificationCode(email);
-            
-            const otpMessage = document.getElementById('otpFormMessage');
-            if (otpMessage) {
-                setMessage(otpMessage, 'تم إرسال رمز تحقق جديد إلى بريدك الإلكتروني', 'success');
+            if (isAccountVerification) {
+                await handleResendVerificationCode(email);
+            } else {
+                await postJson(AUTH_ENDPOINTS.forgotPassword, { email });
             }
-            
+
+            if (otpMessage) {
+                const successText = isAccountVerification
+                    ? 'تم إرسال رمز تحقق جديد إلى بريدك الإلكتروني'
+                    : 'تم إرسال رمز استعادة جديد إلى بريدك الإلكتروني';
+                setMessage(otpMessage, successText, 'success');
+            }
+
             // Start the resend timer
             startResendTimer();
-            
+            timerStarted = true;
+
         } catch (error) {
-            const otpMessage = document.getElementById('otpFormMessage');
             if (otpMessage) {
-                setMessage(otpMessage, error.message || 'فشل إعادة إرسال رمز التحقق', 'error');
+                const errorText = isAccountVerification
+                    ? (error.message || 'فشل إعادة إرسال رمز التحقق')
+                    : (error.message || 'فشل إعادة إرسال رمز الاستعادة');
+                setMessage(otpMessage, errorText, 'error');
             }
         } finally {
             resendBtn.textContent = 'إعادة إرسال رمز التحقق';
-            if (resendTimeLeft <= 0) {
+            if (!timerStarted || resendTimeLeft <= 0) {
                 resendBtn.disabled = false;
             }
         }
