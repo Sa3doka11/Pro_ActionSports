@@ -64,25 +64,25 @@ function initContactForm() {
 const AUTH_USER_STORAGE_KEY = 'actionSportsAuthUser';
 
 const AUTH_ENDPOINTS = {
-    signIn: window.API_CONFIG?.getEndpoint('AUTH_LOGIN'),
-    signUp: window.API_CONFIG?.getEndpoint('AUTH_SIGNUP'),
-    forgotPassword: window.API_CONFIG?.getEndpoint('AUTH_FORGOT_PASSWORD'),
-    verifyResetCode: window.API_CONFIG?.getEndpoint('AUTH_VERIFY_RESET_CODE'),
-    resetPassword: window.API_CONFIG?.getEndpoint('AUTH_RESET_PASSWORD'),
-    verifyAccount: window.API_CONFIG?.getEndpoint('AUTH_VERIFY_ACCOUNT'),
-    resendVerificationCode: window.API_CONFIG?.getEndpoint('AUTH_RESEND_VERIFICATION'),
-    tokenRefresh: window.API_CONFIG?.getEndpoint('AUTH_TOKEN_REFRESH'),
-    logout: window.API_CONFIG?.getEndpoint('AUTH_LOGOUT')
+    get signIn() { return window.API_CONFIG?.getEndpoint('AUTH_LOGIN'); },
+    get signUp() { return window.API_CONFIG?.getEndpoint('AUTH_SIGNUP'); },
+    get forgotPassword() { return window.API_CONFIG?.getEndpoint('AUTH_FORGOT_PASSWORD'); },
+    get verifyResetCode() { return window.API_CONFIG?.getEndpoint('AUTH_VERIFY_RESET_CODE'); },
+    get resetPassword() { return window.API_CONFIG?.getEndpoint('AUTH_RESET_PASSWORD'); },
+    get verifyAccount() { return window.API_CONFIG?.getEndpoint('AUTH_VERIFY_ACCOUNT'); },
+    get resendVerificationCode() { return window.API_CONFIG?.getEndpoint('AUTH_RESEND_VERIFICATION'); },
+    get tokenRefresh() { return window.API_CONFIG?.getEndpoint('AUTH_TOKEN_REFRESH'); },
+    get logout() { return window.API_CONFIG?.getEndpoint('AUTH_LOGOUT'); }
 };
 
-const CONTACT_FORM_ENDPOINT = window.API_CONFIG?.getEndpoint('CONTACT_FORM');
+const CONTACT_FORM_ENDPOINT = () => window.API_CONFIG?.getEndpoint('CONTACT_FORM');
 
 const USER_ENDPOINTS = {
-    me: window.API_CONFIG?.getEndpoint('USER_ME'),
-    changePassword: window.API_CONFIG?.getEndpoint('USER_CHANGE_PASSWORD'),
-    updateAccount: window.API_CONFIG?.getEndpoint('USER_UPDATE_ACCOUNT'),
-    deactivateAccount: window.API_CONFIG?.getEndpoint('USER_DEACTIVATE'),
-    addresses: window.API_CONFIG?.getEndpoint('USER_ADDRESSES'),
+    get me() { return window.API_CONFIG?.getEndpoint('USER_ME'); },
+    get changePassword() { return window.API_CONFIG?.getEndpoint('USER_CHANGE_PASSWORD'); },
+    get updateAccount() { return window.API_CONFIG?.getEndpoint('USER_UPDATE_ACCOUNT'); },
+    get deactivateAccount() { return window.API_CONFIG?.getEndpoint('USER_DEACTIVATE'); },
+    get addresses() { return window.API_CONFIG?.getEndpoint('USER_ADDRESSES'); },
     addressById: (id) => window.API_CONFIG?.buildEndpoint('USER_ADDRESSES', { id })
 };
 
@@ -96,12 +96,12 @@ const ORDER_ENDPOINTS = {
 };
 
 const SHIPPING_ENDPOINTS = {
-    zones: window.API_CONFIG?.getEndpoint('SHIPPING_ZONES')
+    get zones() { return window.API_CONFIG?.getEndpoint('SHIPPING_ZONES'); }
 };
 
 const BANNERS_ENDPOINTS = {
-    publicList: window.API_CONFIG?.getEndpoint('BANNERS_PUBLIC'),
-    list: window.API_CONFIG?.getEndpoint('BANNERS_LIST')
+    get publicList() { return window.API_CONFIG?.getEndpoint('BANNERS_PUBLIC'); },
+    get list() { return window.API_CONFIG?.getEndpoint('BANNERS_LIST'); }
 };
 
 const homepageBannerState = {
@@ -346,7 +346,7 @@ async function loadHomepageBanner() {
     try {
         const response = await fetchHomepageBannerList();
         if (!response) {
-            return;
+            throw new Error('NO_RESPONSE');
         }
         const list = Array.isArray(response?.data)
             ? response.data
@@ -354,8 +354,10 @@ async function loadHomepageBanner() {
                 ? response
                 : [];
 
-        if (!list.length) {
-            return;
+        // ✅ CRITICAL: Home page requires banner data
+        // If no banners returned, treat as server error
+        if (!Array.isArray(list) || list.length === 0) {
+            throw new Error('NO_BANNER_DATA');
         }
 
         const normalized = list
@@ -363,7 +365,7 @@ async function loadHomepageBanner() {
             .sort((a, b) => a.order - b.order);
 
         if (!normalized.length) {
-            return;
+            throw new Error('NO_NORMALIZED_BANNERS');
         }
 
         homepageBannerState.banners = normalized;
@@ -375,6 +377,16 @@ async function loadHomepageBanner() {
         setHomepageBannerSlide(homepageBannerState.currentIndex);
         setupHomepageBannerSlider(normalized);
     } catch (error) {
+        // ✅ Auth errors (401/403) should not show popup
+        const statusCode = error?.status || 0;
+        const isAuthError = statusCode === 401 || statusCode === 403;
+        
+        if (!isAuthError) {
+            // ✅ For non-auth errors on critical data, show popup
+            if (typeof window.showServerErrorPopup === 'function') {
+                window.showServerErrorPopup();
+            }
+        }
     }
 }
 
@@ -441,10 +453,10 @@ if (typeof window !== 'undefined') {
 }
 
 const CART_ENDPOINTS = {
-    base: window.API_CONFIG?.getEndpoint('CART_BASE'),
-    add: window.API_CONFIG?.getEndpoint('CART_ADD'),
-    list: window.API_CONFIG?.getEndpoint('CART_LIST'),
-    clear: window.API_CONFIG?.getEndpoint('CART_CLEAR'),
+    get base() { return window.API_CONFIG?.getEndpoint('CART_BASE'); },
+    get add() { return window.API_CONFIG?.getEndpoint('CART_ADD'); },
+    get list() { return window.API_CONFIG?.getEndpoint('CART_LIST'); },
+    get clear() { return window.API_CONFIG?.getEndpoint('CART_CLEAR'); },
     item: (itemId) => window.API_CONFIG?.buildEndpoint('CART_LIST', { itemId })
 };
 
@@ -1471,9 +1483,20 @@ async function parseJsonSafely(response, retryHandler) {
     }
 }
 
+// ✅ Page-level error handler (for critical API failures only)
+// Pages decide if data is critical and whether to show this popup
+function showServerErrorPopup() {
+    showGlobalErrorPopup(() => {
+        // Retry handler: let caller decide what to retry
+        // For now, just reload the page
+        location.reload();
+    });
+}
+
 if (typeof window !== 'undefined') {
     window.showGlobalErrorPopup = showGlobalErrorPopup;
     window.hideGlobalErrorPopup = hideGlobalErrorPopup;
+    window.showServerErrorPopup = showServerErrorPopup;
 }
 
 if (typeof document !== 'undefined') {
@@ -1660,10 +1683,9 @@ async function apiFetch(url, options = {}) {
         }
     }
 
-    if (!response.ok && (response.status >= 500 || response.status === 0)) {
-        // Allow callers to decide how to surface errors
-    }
-
+    // ✅ IMPORTANT: apiFetch is a pure request helper
+    // It does NOT show popups or UI messages
+    // Callers decide if/how to handle errors
     return response;
 }
 

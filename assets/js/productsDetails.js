@@ -140,20 +140,37 @@
             return null;
         }
 
-        const product = await fetchProductById(productId)
-            || await fetchProductFromList(productId);
+        try {
+            const product = await fetchProductById(productId)
+                || await fetchProductFromList(productId);
 
-        if (!product) {
+            // ✅ CRITICAL: This page requires a valid product
+            // If product not found or invalid, treat as server error
+            if (!product || !product.id) {
+                throw new Error('PRODUCT_NOT_FOUND');
+            }
+
+            currentProduct = product;
+            renderProduct(product);
+            productNotFound.hidden = true;
+            detailsContainer.hidden = false;
+            return product;
+        } catch (error) {
+            // ✅ Auth errors (401/403) should not show popup
+            const statusCode = error?.status || 0;
+            const isAuthError = statusCode === 401 || statusCode === 403;
+            
+            if (!isAuthError) {
+                // ✅ For non-auth errors on critical data, show popup
+                if (typeof window.showServerErrorPopup === 'function') {
+                    window.showServerErrorPopup();
+                }
+            }
+            
             productNotFound.hidden = false;
             detailsContainer.hidden = true;
             return null;
         }
-
-        currentProduct = product;
-        renderProduct(product);
-        productNotFound.hidden = true;
-        detailsContainer.hidden = false;
-        return product;
     }
 
     // ================================================================
