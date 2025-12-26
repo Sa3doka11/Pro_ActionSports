@@ -282,6 +282,19 @@ PRODUCT DETAILS PAGE - style-product-details.css
     font-size: 18px;
 }
 
+.product-info .detail-section ul li:last-child .inline-format-bullet {
+    color: var(--primary-color);
+    font-weight: 700;
+    display: inline-block;
+    transform: rotate(45deg);
+    margin-inline: 4px;
+    vertical-align: middle;
+}
+
+.product-info .detail-section ul li:last-child:before {
+    content: none;
+}
+
 .product-actions {
     display: flex;
     gap: 15px;
@@ -440,6 +453,7 @@ PRODUCT DETAILS PAGE - style-product-details.css
 
 .detail-section ul li:last-child {
     border-bottom: none;
+    display: block;
 }
 
 .detail-section ul li:before {

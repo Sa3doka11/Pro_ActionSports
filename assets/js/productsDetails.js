@@ -159,14 +159,14 @@
             // ✅ Auth errors (401/403) should not show popup
             const statusCode = error?.status || 0;
             const isAuthError = statusCode === 401 || statusCode === 403;
-            
+
             if (!isAuthError) {
                 // ✅ For non-auth errors on critical data, show popup
                 if (typeof window.showServerErrorPopup === 'function') {
                     window.showServerErrorPopup();
                 }
             }
-            
+
             productNotFound.hidden = false;
             detailsContainer.hidden = true;
             return null;
@@ -243,14 +243,14 @@
      */
     function sanitizeHtmlContent(html) {
         if (typeof html !== 'string') return '';
-        
+
         if (typeof window !== 'undefined' && typeof window.DOMPurify !== 'undefined' && typeof window.DOMPurify.sanitize === 'function') {
-            return window.DOMPurify.sanitize(html, { 
+            return window.DOMPurify.sanitize(html, {
                 ALLOWED_TAGS: ['div', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'span', 'br', 'strong', 'em', 'i', 'u', 'b', 'ul', 'ol', 'li', 'a', 'img', 'table', 'tbody', 'thead', 'tfoot', 'tr', 'td', 'th', 'caption', 'form', 'button', 'input', 'textarea', 'select', 'option', 'label', 'fieldset', 'legend', 'video', 'source', 'audio', 'picture', 'figure', 'figcaption', 'section', 'article', 'nav', 'footer', 'header'],
                 ALLOWED_ATTR: ['style', 'class', 'id', 'role', 'data-*', 'href', 'src', 'alt', 'title', 'type', 'name', 'value', 'checked', 'disabled', 'selected', 'action', 'method', 'enctype', 'controls', 'aria-*', 'target', 'rel', 'datetime', 'width', 'height', 'loading', 'poster']
             });
         }
-        
+
         // If DOMPurify is not available, return empty string for security
         return '';
     }
@@ -311,7 +311,7 @@
 
         addToCartBtn.addEventListener('click', function(e) {
             e.preventDefault();
-            
+
             if (currentProduct) {
                 addToCart(currentProduct);
             }
@@ -326,7 +326,7 @@
         if (typeof ensureAuthUserLoaded === 'function') {
             await ensureAuthUserLoaded(false);
         }
-        
+
         loadProductData();
         ensureCartStateLoaded()
             .finally(() => {
@@ -416,7 +416,10 @@
                 : `<span class="current-price">${formatPrice(product.price)}</span>`;
             safeSetHTML(priceValue, sanitizeHtmlContent(priceMarkup));
         }
-        if (productDescription) productDescription.textContent = product.description;
+        if (productDescription) {
+            const formattedDescription = (product.description || '').replace(/\n/g, '<br>');
+            safeSetHTML(productDescription, formattedDescription);
+        }
 
         if (brandDetailSection) {
             const brandName = product.brand?.name || product.brand?.title || product.brandName || product.manufacturer || product.vendor || '';
@@ -445,7 +448,8 @@
                 normalizedSpecs.forEach(spec => {
                     const li = document.createElement('li');
                     li.className = 'usage-spec-item';
-                    li.textContent = `${spec.label}: ${spec.value}`;
+                    const formattedText = `${spec.label}: ${spec.value}`.replace(/\n/g, '<br>');
+                    safeSetHTML(li, formattedText);
                     usageList.appendChild(li);
                 });
             } else {
@@ -457,7 +461,7 @@
         }
 
         if (deliveryInfo) {
-            deliveryInfo.textContent = 'التوصيل والتركيب يتم خلال ٣ إلى ٥ أيام.';
+            deliveryInfo.textContent = 'التوصيل والتركيب يتم خلال 3 إلى 10 أيام.';
         }
 
         if (warrantyInfo) {
@@ -468,6 +472,8 @@
                 </p>
             `);
         }
+
+        applyDetailInlineFormatting();
     }
 
     function formatPrice(value) {
@@ -773,6 +779,120 @@
             .replace(/>/g, '&gt;')
             .replace(/"/g, '&quot;')
             .replace(/'/g, '&#39;');
+    }
+
+    const DETAIL_INLINE_SOURCE_ATTR = 'data-detail-inline-source';
+
+    function buildBoldFragment(text) {
+        const fragment = document.createDocumentFragment();
+        if (typeof text !== 'string' || !text) {
+            return fragment;
+        }
+
+        const boldPattern = /\*(.+?)\*/g;
+        let lastIndex = 0;
+        let match;
+
+        while ((match = boldPattern.exec(text)) !== null) {
+            const before = text.slice(lastIndex, match.index);
+            if (before) {
+                fragment.appendChild(document.createTextNode(before));
+            }
+
+            const strong = document.createElement('strong');
+            strong.textContent = match[1];
+            fragment.appendChild(strong);
+            lastIndex = match.index + match[0].length;
+        }
+
+        const tail = text.slice(lastIndex);
+        if (tail) {
+            fragment.appendChild(document.createTextNode(tail));
+        }
+
+        return fragment;
+    }
+
+    function renderDetailInlineFragment(source) {
+        const safeSource = typeof source === 'string' ? source.replace(/\r/g, '') : '';
+        const lines = safeSource.split('\n');
+        const fragment = document.createDocumentFragment();
+        let blankLineCount = 0;
+        let hasWrittenContent = false;
+
+        lines.forEach(line => {
+            const trimmedLeading = line.replace(/^\s+/, '');
+            if (!trimmedLeading.trim()) {
+                blankLineCount += 1;
+                return;
+            }
+
+            if (hasWrittenContent) {
+                const breakCount = blankLineCount + 1;
+                for (let i = 0; i < breakCount; i += 1) {
+                    fragment.appendChild(document.createElement('br'));
+                }
+            }
+
+            blankLineCount = 0;
+
+            const bulletMatch = trimmedLeading.match(/^([\-\._\*\u2026])\s*/);
+            const hasBullet = Boolean(bulletMatch);
+            let remainder = hasBullet
+                ? trimmedLeading.slice(bulletMatch[0].length)
+                : trimmedLeading;
+
+            if (hasBullet && bulletMatch[1] === '*') {
+                remainder = `*${remainder}`;
+            }
+
+            const content = remainder.trim();
+            if (!content) {
+                return;
+            }
+
+            if (hasBullet) {
+                const bullet = document.createElement('span');
+                bullet.className = 'inline-format-bullet';
+                bullet.setAttribute('aria-hidden', 'true');
+                bullet.textContent = '◆';
+                fragment.appendChild(bullet);
+                fragment.appendChild(document.createTextNode('\u00A0'));
+            }
+
+            const boldFragment = buildBoldFragment(content);
+            fragment.appendChild(boldFragment);
+            hasWrittenContent = true;
+        });
+
+        if (!hasWrittenContent) {
+            const fallback = buildBoldFragment(safeSource.trim());
+            fragment.appendChild(fallback);
+        }
+
+        return fragment;
+    }
+
+    function formatDetailItem(listItem) {
+        if (!listItem) {
+            return;
+        }
+
+        let original = listItem.getAttribute(DETAIL_INLINE_SOURCE_ATTR);
+        if (original === null) {
+            original = listItem.textContent || '';
+            listItem.setAttribute(DETAIL_INLINE_SOURCE_ATTR, original);
+        }
+
+        const formattedFragment = renderDetailInlineFragment(original);
+        listItem.innerHTML = '';
+        listItem.appendChild(formattedFragment);
+    }
+
+    function applyDetailInlineFormatting() {
+        document
+            .querySelectorAll('.product-info .detail-section ul li:last-child')
+            .forEach(formatDetailItem);
     }
 
     function normalizeBrand(rawProduct) {
