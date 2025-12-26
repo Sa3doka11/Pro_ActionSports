@@ -26,12 +26,12 @@ function handleContactFormSubmit(event) {
         return;
     }
 
-    if (submitButton) {
+    if (submitButton) { 
         submitButton.disabled = true;
         safeSetHTML(submitButton, '<i class="fa fa-spinner fa-spin"></i> جارٍ الإرسال...');
     }
 
-    postJson(CONTACT_FORM_ENDPOINT, payload)
+    postJson(CONTACT_FORM_ENDPOINT(), payload)
         .then(() => {
             showToast('تم إرسال رسالتك بنجاح. سنعاود التواصل قريباً.', 'success');
             form.reset();
