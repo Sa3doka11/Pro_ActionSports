@@ -63,6 +63,8 @@
         ORDERS_LIST: `${API_BASE_URL}/orders`,
         ORDERS_MY: `${API_BASE_URL}/orders/me`,
         ORDERS_PAY_PAYTABS: `${API_BASE_URL}/orders/pay-with-paytabs`,
+        ORDERS_PAY_TAMARA: `${API_BASE_URL}/orders/pay-with-tamara`,
+        ORDERS_PAY_TABBY: `${API_BASE_URL}/orders/pay-with-tabby`,
 
         // ========== الشحن والمناطق ==========
         SHIPPING_ZONES: `${API_BASE_URL}/shipping-zones`,

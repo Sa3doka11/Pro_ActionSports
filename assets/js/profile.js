@@ -24,26 +24,26 @@ function validateCurrentUserOwnership(resourceId) {
  */
 function sanitizeHtmlContent(html) {
     if (typeof html !== 'string') return '';
-    
+
     if (typeof window !== 'undefined' && typeof window.DOMPurify !== 'undefined' && typeof window.DOMPurify.sanitize === 'function') {
-        return window.DOMPurify.sanitize(html, { 
+        return window.DOMPurify.sanitize(html, {
             ALLOWED_TAGS: [
-                'div', 'h1', 'h2', 'h3', 'h4', 'p', 'span', 'br', 'strong', 'em', 
-                'i', 'u', 'ul', 'ol', 'li', 'a', 'img', 
+                'div', 'h1', 'h2', 'h3', 'h4', 'p', 'span', 'br', 'strong', 'em',
+                'i', 'u', 'ul', 'ol', 'li', 'a', 'img',
                 // الجداول
-                'table', 'tbody', 'tr', 'td', 'th', 'thead', 'tfoot', 'caption', 
+                'table', 'tbody', 'tr', 'td', 'th', 'thead', 'tfoot', 'caption',
                 // النماذج والتفاعل
-                'form', 'button', 'input', 'textarea', 'select', 'option', 'label', 
-                'fieldset', 'legend', 
+                'form', 'button', 'input', 'textarea', 'select', 'option', 'label',
+                'fieldset', 'legend',
                 // الوسائط
                 'video', 'source', 'audio', 'picture', 'figure', 'figcaption',
                 // الهياكل الدلالية
                 'section', 'article', 'nav', 'footer', 'header'
             ],
             ALLOWED_ATTR: [
-                'style', 'class', 'id', 'role', 'data-*', 'href', 'src', 
+                'style', 'class', 'id', 'role', 'data-*', 'href', 'src',
                 // خصائص النماذج
-                'type', 'name', 'value', 'checked', 'disabled', 'selected', 
+                'type', 'name', 'value', 'checked', 'disabled', 'selected',
                 'action', 'method', 'enctype', 'controls', 'alt', 'title',
                 // خصائص إضافية للتصميم والهيكلة
                 'aria-*', 'target', 'rel', 'datetime', 'width', 'height', 'loading', 'poster',
@@ -52,19 +52,19 @@ function sanitizeHtmlContent(html) {
             ]
         });
     }
-    
+
     // If DOMPurify is not available, return empty string for security
     return '';
 }
 
 /**
  * Safe way to set innerHTML with sanitization
+ * SECURITY FIX: Always sanitize HTML content before DOM insertion to prevent XSS
  */
 function safeSetHTML(element, html) {
     if (!element || typeof element.innerHTML === 'undefined') return;
-    // Only sanitize if html is not already sanitized (from DOMPurify)
-    // If it's raw user input, it's already been sanitized at the source level
-    element.innerHTML = html;
+    const sanitized = sanitizeHtmlContent(html);
+    element.innerHTML = sanitized;
 }
 
 /**
@@ -947,7 +947,7 @@ async function changePassword({ currentPassword, newPassword, confirmPassword })
             newPassword,
             passwordConfirm: confirmPassword
         });
-        
+
         // حذف التوكن القديم بعد تغيير كلمة المرور (من cookies فقط)
         // تنظيف جميع البيانات الحساسة
         try {
@@ -967,7 +967,7 @@ async function changePassword({ currentPassword, newPassword, confirmPassword })
                 'redirectAfterLogin',
                 'actionSportsInstallmentSummary'
             ];
-            
+
             SENSITIVE_KEYS.forEach(key => {
                 localStorage.removeItem(key);
                 sessionStorage.removeItem(key);
@@ -975,16 +975,16 @@ async function changePassword({ currentPassword, newPassword, confirmPassword })
         } catch (e) {
             // Storage cleanup error - continue
         }
-        
+
         // حذف cookies
         if (typeof removeCookie === 'function') {
             removeCookie('accessToken');
             removeCookie('refreshToken');
         }
-        
+
         // عرض رسالة النجاح والانتظار قبل إعادة التوجيه
         showCustomAlert('تم تغيير كلمة المرور بنجاح. يرجى تسجيل الدخول مرة أخرى.');
-        
+
         // إعادة التوجيه لصفحة تسجيل الدخول بعد ثانيتين
         setTimeout(() => {
             window.location.href = './index.html';
@@ -1018,7 +1018,7 @@ function showCustomConfirm(message) {
         document.body.appendChild(overlay);
         setTimeout(() => overlay.classList.add('show'), 10);
 
-        overlay.querySelector('.confirm-yes').onclick = function() {
+        overlay.querySelector('.confirm-yes').onclick = function () {
             overlay.classList.remove('show');
             setTimeout(() => {
                 document.body.removeChild(overlay);
@@ -1026,7 +1026,7 @@ function showCustomConfirm(message) {
             }, 300);
         };
 
-        overlay.querySelector('.confirm-no').onclick = function() {
+        overlay.querySelector('.confirm-no').onclick = function () {
             overlay.classList.remove('show');
             setTimeout(() => {
                 document.body.removeChild(overlay);
@@ -1126,25 +1126,25 @@ function showEditProfileModal() {
     `;
     // Note: safeSetHTML already sanitizes internally; don't double-sanitize the whole HTML
     safeSetHTML(modal, editHtml);
-    
+
     document.body.appendChild(modal);
-    
+
     // Attach event listeners after DOM injection (onclick attributes get stripped by sanitizer)
     const closeBtn = modal.querySelector('.edit-modal-close');
     if (closeBtn) {
         closeBtn.addEventListener('click', closeEditModal);
     }
-    
+
     const saveBtn = modal.querySelector('.edit-modal-btn.save');
     if (saveBtn) {
         saveBtn.addEventListener('click', saveProfileChanges);
     }
-    
+
     const cancelBtn = modal.querySelector('.edit-modal-btn.cancel');
     if (cancelBtn) {
         cancelBtn.addEventListener('click', closeEditModal);
     }
-    
+
     setTimeout(() => modal.classList.add('show'), 10);
 }
 
@@ -1168,7 +1168,7 @@ async function saveProfileChanges() {
     try {
         const endpoint = window.API_CONFIG?.getEndpoint('USER_UPDATE_ACCOUNT') || 'https://action-sports-api.vercel.app/api/users/me/update-account';
         const response = await patchJson(endpoint, { name: newName });
-        
+
         // Merge server response with existing auth data to preserve all properties
         const serverUser = response?.data || response?.user || response;
         const updatedUser = {
@@ -1180,7 +1180,7 @@ async function saveProfileChanges() {
         // Persist merged user back to auth cache and UI
         setAuthUser(updatedUser);
         populateProfileFromAuthUser(updatedUser);
-        
+
         // Dispatch custom event for other components to listen
         document.dispatchEvent(new CustomEvent("auth:user-updated", { detail: { user: updatedUser } }));
 
@@ -1197,7 +1197,7 @@ async function saveProfileChanges() {
 // ===================================================================
 
 // Entry point: prepare profile page interactions once DOM ready
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     initProfile();
     setupEventListeners();
 });
@@ -1218,10 +1218,10 @@ async function hydrateProfileFromAuth() {
         if (typeof ensureCookiesReady === 'function') {
             await ensureCookiesReady();
         }
-        
+
         // Now that cookies are ready, ensure auth is loaded
         const user = await ensureAuthUserLoaded(false);
-        
+
         // After cookie-ready state, check if user is authenticated
         if (!user || !isAuthenticated()) {
             // المستخدم غير مسجل دخول - أعد التوجيه لتسجيل الدخول
@@ -1231,7 +1231,7 @@ async function hydrateProfileFromAuth() {
             window.location.href = 'index.html';
             return;
         }
-        
+
         // User is authenticated, populate profile
         populateProfileFromAuthUser(user);
     } catch (error) {
@@ -1244,7 +1244,7 @@ async function hydrateProfileFromAuth() {
 
 function populateProfileFromAuthUser(user) {
     if (!user) return;
-    
+
     const displayName = user.name || 'مستخدم';
     const email = user.email || '';
 
@@ -1307,7 +1307,7 @@ function setupOrderActions() {
     const ordersContainer = document.getElementById('ordersGrid');
     if (!ordersContainer) return;
 
-    ordersContainer.onclick = async function(event) {
+    ordersContainer.onclick = async function (event) {
         const actionBtn = event.target.closest('.action-btn');
         if (!actionBtn) return;
 
@@ -1352,7 +1352,7 @@ let currentOrderId = null;
 async function refreshOrderStatus(orderId) {
     try {
         const endpoint = window.API_CONFIG?.buildEndpoint('ORDERS_LIST', { id: orderId }) || `https://action-sports-api.vercel.app/api/orders/${orderId}`;
-        
+
         // ✅ استخدم getJson بدل fetch المباشر
         const data = await getJson(endpoint);
         if (!data) return;
@@ -1374,9 +1374,9 @@ function startOrderStatusRefresh(orderId) {
     if (currentOrderRefreshInterval) {
         clearInterval(currentOrderRefreshInterval);
     }
-    
+
     currentOrderId = orderId;
-    
+
     // Refresh every 5 seconds
     currentOrderRefreshInterval = setInterval(() => {
         refreshOrderStatus(orderId);
@@ -1399,7 +1399,7 @@ function showOrderDetailsModal(order) {
     safeSetHTML(modal.querySelector('.order-details-body'), sanitizeHtmlContent(renderOrderDetails(order)));
     modal.classList.add('visible');
     modal.classList.remove('hidden');
-    
+
     // Start auto-refreshing order status every 5 seconds
     if (order._id || order.id) {
         startOrderStatusRefresh(order._id || order.id);
@@ -1412,7 +1412,7 @@ function hideOrderDetailsModal() {
         modal.classList.remove('visible');
         modal.classList.add('hidden');
     }
-    
+
     // Stop auto-refresh when modal is closed
     stopOrderStatusRefresh();
 }
@@ -1889,12 +1889,12 @@ function resolveOrderItemQuantity(item) {
 }
 
 async function loadUserOrders() {
-const ordersGrid = document.getElementById('ordersGrid');
-if (!ordersGrid) return;
+    const ordersGrid = document.getElementById('ordersGrid');
+    if (!ordersGrid) return;
 
-updateOrderStatsDisplay(0, 0);
+    updateOrderStatsDisplay(0, 0);
 
-const loadingHtml = `
+    const loadingHtml = `
 <div class="order-card skeleton-card">
 <div class="order-card-header">
 <div class="order-number">
@@ -1949,11 +1949,11 @@ const loadingHtml = `
 </div>
 `;
 
-// Show multiple skeleton cards
-safeSetHTML(ordersGrid, loadingHtml.repeat(3));
+    // Show multiple skeleton cards
+    safeSetHTML(ordersGrid, loadingHtml.repeat(3));
     try {
         const endpoint = window.API_CONFIG?.getEndpoint('ORDERS_MY') || 'https://action-sports-api.vercel.app/api/orders/me';
-        
+
         // ✅ استخدم getJson بدل fetch المباشر
         const data = await getJson(endpoint);
 
@@ -2168,7 +2168,7 @@ async function handleViewOrder(orderId) {
 
     try {
         const endpoint = window.API_CONFIG?.buildEndpoint('ORDERS_LIST', { id: orderId }) || `https://action-sports-api.vercel.app/api/orders/${orderId}`;
-        
+
         // ✅ استخدم getJson بدل fetch المباشر
         const data = await getJson(endpoint);
         if (!data) {
@@ -2198,7 +2198,7 @@ async function handleCancelOrder(orderId, row) {
 
     try {
         const endpoint = `https://action-sports-api.vercel.app/api/orders/${orderId}/cancel`;
-        
+
         // ✅ استخدم patchJson بدل fetch المباشر
         const data = await patchJson(endpoint, {});
 
@@ -2216,14 +2216,14 @@ async function handleCancelOrder(orderId, row) {
 function checkAccountVerificationStatus(user) {
     const unverifiedBanner = document.getElementById('unverifiedBanner');
     const verifyBtn = document.getElementById('verifyAccountBtn');
-    
+
     if (!unverifiedBanner) return;
-    
+
     const isUnverified = user?.isUnverified || user?.status === 'unverified' || user?.verified === false;
-    
+
     if (isUnverified) {
         unverifiedBanner.hidden = false;
-        
+
         if (verifyBtn) {
             verifyBtn.addEventListener('click', async () => {
                 const email = user?.email || document.getElementById('userEmail')?.textContent?.trim();
@@ -2231,15 +2231,15 @@ function checkAccountVerificationStatus(user) {
                     showCustomAlert('لم يتم العثور على البريد الإلكتروني');
                     return;
                 }
-                
+
                 try {
                     verifyBtn.disabled = true;
                     verifyBtn.textContent = 'جاري الإرسال...';
-                    
+
                     await handleResendVerificationCode(email);
-                    
+
                     showCustomAlert('تم إرسال رمز التحقق إلى بريدك الإلكتروني');
-                    
+
                     // عرض popup التحقق
                     if (typeof showAccountVerificationPopup === 'function') {
                         setTimeout(() => {

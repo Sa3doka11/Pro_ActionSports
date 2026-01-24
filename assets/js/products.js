@@ -14,9 +14,13 @@
     let currentCategoryId = 'all';
     let currentSubCategory = 'all';
     let searchQuery = '';
+    let minPriceFilter = 0;
+    let maxPriceFilter = Infinity;
+    let isBestSellingEnabled = false;
+    let currentSortBy = 'none';
     let isFetchingProducts = false;
     let isFetchingCategories = false;
-    let productsLoaded = false; // Track if products have been loaded from API
+    let productsLoaded = false;
 
     const FALLBACK_IMAGE = 'assets/images/product1.png';
 
@@ -126,12 +130,20 @@
         const clearSearch = document.getElementById('clearSearch');
 
         if (searchInput) {
-            searchInput.addEventListener('input', function(e) {
-                searchQuery = e.target.value.trim().toLowerCase();
-                if (clearSearch) {
-                    clearSearch.classList.toggle('active', searchQuery !== '');
+            searchInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    searchQuery = this.value.trim().toLowerCase();
+                    if (clearSearch) {
+                        clearSearch.classList.toggle('active', searchQuery !== '');
+                    }
+                    filterProducts();
                 }
-                filterProducts();
+            });
+
+            searchInput.addEventListener('input', function(e) {
+                if (clearSearch) {
+                    clearSearch.classList.toggle('active', e.target.value.trim() !== '');
+                }
             });
         }
 
@@ -187,33 +199,132 @@
         if (cartOverlay) {
             cartOverlay.addEventListener('click', closeCart);
         }
+
+        // Filter/Sort Popup
+        const filterBtn = document.getElementById('filterSortBtn');
+        const filterPopup = document.getElementById('filterSortPopup');
+        const closeFilterBtn = document.getElementById('closeFilterPopup');
+        const applyFilterBtn = document.getElementById('applyFilters');
+        const resetFilterBtn = document.getElementById('resetFilters');
+        const filterOverlay = document.getElementById('filterSortOverlay');
+
+        if (filterBtn) {
+            filterBtn.addEventListener('click', function() {
+                if (filterPopup) {
+                    filterPopup.classList.add('active');
+                    if (filterOverlay) filterOverlay.classList.add('active');
+                }
+            });
+        }
+
+        const closePopup = () => {
+            if (filterPopup) filterPopup.classList.remove('active');
+            if (filterOverlay) filterOverlay.classList.remove('active');
+        };
+
+        if (closeFilterBtn) {
+            closeFilterBtn.addEventListener('click', closePopup);
+        }
+
+        if (filterOverlay) {
+            filterOverlay.addEventListener('click', closePopup);
+        }
+
+        if (applyFilterBtn) {
+            applyFilterBtn.addEventListener('click', function() {
+                const sortSelect = document.querySelector('input[name="sortBy"]:checked');
+                if (sortSelect) {
+                    currentSortBy = sortSelect.value;
+                }
+                const popupMinPrice = document.getElementById('popupMinPrice');
+                const popupMaxPrice = document.getElementById('popupMaxPrice');
+                if (popupMinPrice) minPriceFilter = Number(popupMinPrice.value) || 0;
+                if (popupMaxPrice) maxPriceFilter = Number(popupMaxPrice.value) || Infinity;
+                filterProducts();
+                closePopup();
+            });
+        }
+
+        if (resetFilterBtn) {
+            resetFilterBtn.addEventListener('click', function() {
+                currentSortBy = 'none';
+                minPriceFilter = 0;
+                maxPriceFilter = Infinity;
+                const popupMinPrice = document.getElementById('popupMinPrice');
+                const popupMaxPrice = document.getElementById('popupMaxPrice');
+                if (popupMinPrice) popupMinPrice.value = '0';
+                if (popupMaxPrice) popupMaxPrice.value = '';
+                document.querySelectorAll('input[name="sortBy"]').forEach(el => el.checked = false);
+                filterProducts();
+                closePopup();
+            });
+        }
     }
 
     /* ===================================================================
     3. Filter and Render Products
     =================================================================== */
+    function applySorting(products) {
+        if (currentSortBy === 'price-low-high') {
+            return [...products].sort((a, b) => {
+                const priceA = a.discountPrice || a.price || 0;
+                const priceB = b.discountPrice || b.price || 0;
+                return Number(priceA) - Number(priceB);
+            });
+        }
+        if (currentSortBy === 'price-high-low') {
+            return [...products].sort((a, b) => {
+                const priceA = a.discountPrice || a.price || 0;
+                const priceB = b.discountPrice || b.price || 0;
+                return Number(priceB) - Number(priceA);
+            });
+        }
+        if (currentSortBy === 'best-selling') {
+            return [...products].sort((a, b) => {
+                const soldA = Number(a.sold) || 0;
+                const soldB = Number(b.sold) || 0;
+                return soldB - soldA;
+            });
+        }
+        return products;
+    }
+
     // Render products matching current category/search filters
     function filterProducts() {
         const grid = document.getElementById('productsGrid');
+        const emptyState = document.getElementById('no-products-message');
 
         if (!grid) return;
 
-        const filteredProducts = allProducts.filter(product => {
+        const filteredProducts = applySorting(allProducts.filter(product => {
             const matchesCategory = matchesAnyFilter([currentCategory, currentCategoryId], product.categorySlug, product.categoryId, product.categoryName);
             const matchesSubCategory = matchesAnyFilter([currentSubCategory], product.subCategorySlug, product.subCategoryId, product.subCategoryName);
             const matchesSearch = !searchQuery ||
                 product.name.toLowerCase().includes(searchQuery) ||
                 (product.categoryName && product.categoryName.toLowerCase().includes(searchQuery)) ||
                 (product.description && product.description.toLowerCase().includes(searchQuery));
-            return matchesCategory && matchesSubCategory && matchesSearch;
-        });
+            const productPrice = Number(product.price) || 0;
+            const matchesPrice = productPrice >= minPriceFilter && productPrice <= maxPriceFilter;
+            return matchesCategory && matchesSubCategory && matchesSearch && matchesPrice;
+        }));
 
         if (filteredProducts.length === 0) {
             grid.classList.add('is-hidden');
+            if (emptyState) {
+                let message = 'عذراً، لم نجد منتجات تطابق معايير البحث.';
+                if (minPriceFilter > 0 || maxPriceFilter !== Infinity) {
+                    message = `عذراً، لم نجد منتجات بالأسعار المختارة (${formatPrice(minPriceFilter)} - ${formatPrice(maxPriceFilter)} ﷼).`;
+                }
+                safeSetHTML(emptyState, sanitizeHtmlContent(`<h3>لا توجد منتجات</h3><p>${message}</p>`));
+                emptyState.classList.remove('hidden');
+            }
             return;
         }
 
         grid.classList.remove('is-hidden');
+        if (emptyState) {
+            emptyState.classList.add('hidden');
+        }
 
         const gridHtml = filteredProducts.map(product => {
             const hasDiscount = Number.isFinite(product.originalPrice) && product.originalPrice > 0
@@ -645,6 +756,8 @@
 
         const description = product.shortDescription || product.description || 'اكتشف المزيد عن هذا المنتج عند فتح التفاصيل.';
 
+        const sold = Number(product.sold) || 0;
+
         return {
             id,
             name,
@@ -662,6 +775,7 @@
             brandName: product.brand?.name || '',
             warrantyInfo: product.warrantyInfo || '',
             deliveryInfo: product.deliveryInfo || '',
+            sold,
             raw: product
         };
     }

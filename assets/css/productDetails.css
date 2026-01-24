@@ -464,6 +464,136 @@ PRODUCT DETAILS PAGE - style-product-details.css
     margin-top: 5px;
 }
 
+/* ================================================================
+   Markdown content styling
+   Ensures proper list bullets, spacing, and readable typography
+================================================================ */
+.markdown-content {
+    line-height: 1.9;
+}
+
+/* Avoid default detail-section bullets and borders on the markdown wrapper li */
+.detail-section ul li.markdown-content {
+    padding: 0;
+    border: none;
+}
+.detail-section ul li.markdown-content:before {
+    content: none;
+}
+
+/* Style lists inside markdown content (RTL) */
+.markdown-content ul,
+.markdown-content ol {
+    margin-right: 20px;
+    padding-right: 1.25rem;
+    list-style-position: outside;
+}
+
+.markdown-content ul {
+    list-style: disc;
+}
+
+.markdown-content ol {
+    list-style: decimal;
+}
+
+.markdown-content li {
+    display: list-item;
+    list-style: inherit;
+    border: none;
+    padding: 6px 0;
+}
+
+/* Override legacy detail-section list styles that remove markers (list-style:none + display:flex) */
+.detail-section .markdown-content ul,
+.detail-section .markdown-content ol {
+    list-style-position: outside;
+}
+
+.detail-section .markdown-content ul {
+    list-style: disc;
+}
+
+.detail-section .markdown-content ol {
+    list-style: decimal;
+}
+
+.detail-section .markdown-content ul li,
+.detail-section .markdown-content ol li {
+    display: list-item;
+    list-style: inherit;
+    align-items: initial;
+}
+
+.markdown-content li::marker,
+.detail-section .markdown-content li::marker {
+    color: var(--primary-color);
+}
+
+/* Remove special bullets and borders inside markdown nested lists */
+.detail-section .markdown-content ul li:before,
+.detail-section .markdown-content ol li:before {
+    content: none;
+}
+
+.markdown-content p {
+    margin: 0 0 10px 0;
+}
+
+.markdown-content strong {
+    font-weight: 800;
+}
+
+/* High-specificity reset for legacy usage list items rendered via Markdown */
+li.usage-spec-item.markdown-content {
+    display: block !important;
+    width: 100% !important;
+    text-align: right !important;
+    line-height: 1.9 !important;
+    list-style: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    gap: 0 !important;
+    align-items: initial !important;
+    justify-content: initial !important;
+}
+
+li.usage-spec-item.markdown-content > * {
+    width: 100%;
+}
+
+li.usage-spec-item.markdown-content ul,
+li.usage-spec-item.markdown-content ol {
+    list-style-position: outside !important;
+    margin: 0 0 0 0 !important;
+    margin-right: 1.25rem !important;
+    padding: 0 1.25rem 0 0 !important;
+    list-style: disc !important;
+}
+
+li.usage-spec-item.markdown-content ol {
+    list-style: decimal !important;
+}
+
+li.usage-spec-item.markdown-content li {
+    display: list-item !important;
+    text-align: right !important;
+    border: none !important;
+    padding: 6px 0 !important;
+    margin: 0 !important;
+    list-style: inherit !important;
+}
+
+li.usage-spec-item.markdown-content li::marker {
+    color: var(--primary-color) !important;
+}
+
+li.usage-spec-item.markdown-content p {
+    margin: 0 0 10px 0 !important;
+    text-align: right !important;
+}
+
 .specs-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));

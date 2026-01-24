@@ -227,12 +227,72 @@
                         <input type="text" id="searchInput" placeholder="ابحث عن المنتجات..." autocomplete="off">
                         <button class="clear-search" id="clearSearch">×</button>
                     </div>
+                    <button id="filterSortBtn" class="filter-sort-icon-btn" title="الفرز والتصفية">
+                        <i class="fa-solid fa-sliders"></i>
+                    </button>
+                </div>
+                <!-- Filter/Sort Popup -->
+                <div id="filterSortOverlay" class="filter-sort-overlay"></div>
+                <div id="filterSortPopup" class="filter-sort-popup">
+                    <div class="filter-popup-header">
+                        <h2>الفرز والتصفية</h2>
+                        <button id="closeFilterPopup" class="close-filter-btn">&times;</button>
+                    </div>
+                    <div class="filter-popup-content">
+                        <!-- Sort Options -->
+                        <div class="filter-section">
+                            <h3>فرز حسب</h3>
+                            <div class="sort-options">
+                                <label class="sort-option">
+                                    <input type="radio" name="sortBy" value="price-low-high">
+                                    <span>السعر: من الأقل للأعلى</span>
+                                </label>
+                                <label class="sort-option">
+                                    <input type="radio" name="sortBy" value="price-high-low">
+                                    <span>السعر: من الأعلى للأقل</span>
+                                </label>
+                                <label class="sort-option">
+                                    <input type="radio" name="sortBy" value="best-selling">
+                                    <span>الأكثر مبيعاً</span>
+                                </label>
+                            </div>
+                        </div>
+                        <!-- Price Range Filter -->
+                        <div class="filter-section">
+                            <h3>نطاق السعر</h3>
+                            <div class="price-range-inputs">
+                                <div class="price-input-wrapper">
+                                    <label for="popupMinPrice">من</label>
+                                    <input type="number" id="popupMinPrice" placeholder="0" min="0" value="0">
+                                </div>
+                                <div class="price-input-wrapper">
+                                    <label for="popupMaxPrice">إلى</label>
+                                    <input type="number" id="popupMaxPrice" placeholder="100000" min="0">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="filter-popup-footer">
+                        <button id="resetFilters" class="reset-filter-btn">إعادة تعيين</button>
+                        <button id="applyFilters" class="apply-filter-btn">تطبيق</button>
+                    </div>
                 </div>
                 <!-- Filters Section -->
                 <div class="filters-section">
-                    <h3>تصفية حسب الفئة</h3>
-                    <div class="filter-buttons" id="categoryFilters">
-                        <button class="filter-btn active" data-category="all">الكل</button>
+                    <div class="filters-row">
+                        <div class="filter-group">
+                            <h3>تصفية حسب الفئة</h3>
+                            <div class="filter-buttons" id="categoryFilters">
+                                <button class="filter-btn active" data-category="all">الكل</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Empty State Message -->
+                <div id="no-products-message" class="no-products-message hidden">
+                    <div class="no-products-content">
+                        <h3>لا توجد منتجات</h3>
+                        <p>عذراً، لم نجد منتجات تطابق معايير البحث.</p>
                     </div>
                 </div>
                 <!-- Products Grid -->

@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<!-- <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com; font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com data:; img-src 'self' data: https://cdnjs.cloudflare.com https://fonts.gstatic.com https://fonts.googleapis.com https://*.cloudinary.com https://api.qrserver.com blob:; connect-src 'self' https://action-sports-api.vercel.app https://api.actionsports4u.com https://cdnjs.cloudflare.com; media-src 'self' blob:; frame-src 'self' https://www.google.com https://*.google.com; object-src 'none'; base-uri 'self'; form-action 'self'; worker-src 'self' blob:; manifest-src 'self'; upgrade-insecure-requests;">    <meta name="description" content="متجر إلكتروني لبيع الأجهزة الرياضية"> -->
+    <!-- <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com; font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com data:; img-src 'self' data: https://cdnjs.cloudflare.com https://fonts.gstatic.com https://fonts.googleapis.com https://*.cloudinary.com https://api.qrserver.com blob:; connect-src 'self' https://action-sports-api.vercel.app https://api.actionsports4u.com https://cdnjs.cloudflare.com; media-src 'self' blob:; frame-src 'self' https://www.google.com https://*.google.com; object-src 'none'; base-uri 'self'; form-action 'self'; worker-src 'self' blob:; manifest-src 'self'; upgrade-insecure-requests;">    <meta name="description" content="متجر إلكتروني لبيع الأجهزة الرياضية"> -->
     <link rel="apple-touch-icon" sizes="57x57" href="./assets/images/Logo.png">
     <link rel="apple-touch-icon" sizes="60x60" href="./assets/images/Logo.png">
     <link rel="apple-touch-icon" sizes="72x72" href="./assets/images/Logo.png">
@@ -19,7 +19,7 @@
     <link rel="icon" type="image/png" sizes="64x64" href="./assets/images/Logo.png">
     <link rel="icon" type="image/png" sizes="96x96" href="./assets/images/Logo.png">
     <link rel="icon" type="image/png" sizes="16x16" href="./assets/images/Logo.png">
-        <link rel="manifest" href="./favicon/manifest.json">
+    <link rel="manifest" href="./favicon/manifest.json">
     <meta name="msapplication-TileColor" content="#ffffff">
     <meta name="msapplication-TileImage" content="./assets/images/Logo.png">
     <meta name="theme-color" content="#ffffff">
@@ -35,6 +35,8 @@
     <link rel="stylesheet" href="assets/css/style-rtl.css">
     <link rel="stylesheet" href="assets/css/home.css">
     <link rel="stylesheet" href="assets/css/popup.css">
+    <link rel="stylesheet" href="assets/css/cart.css">
+
 </head>
 
 <body>
@@ -109,8 +111,10 @@
                                         <label for="loginPassword">كلمة المرور</label>
                                         <span class="input-error" data-error-for="loginPassword"></span>
                                     </div>
-                                    <button type="submit" class="login-btn" id="loginSubmit" data-loading-text="جاري تسجيل الدخول...">تسجيل الدخول</button>
-                                    <div id="loginFormMessage" class="form-message" role="alert" aria-live="polite"></div>
+                                    <button type="submit" class="login-btn" id="loginSubmit"
+                                        data-loading-text="جاري تسجيل الدخول...">تسجيل الدخول</button>
+                                    <div id="loginFormMessage" class="form-message" role="alert" aria-live="polite">
+                                    </div>
                                 </form>
                                 <p class="auth-helper">
                                     <a class="password-reset-link" data-action="forgot-password">نسيت كلمة المرور؟</a>
@@ -135,22 +139,27 @@
                                         <span class="input-error" data-error-for="signupEmail"></span>
                                     </div>
                                     <div class="input-group">
-                                        <input type="tel" id="signupPhone" name="phone" inputmode="tel" pattern="\d{8,15}" required>
+                                        <input type="tel" id="signupPhone" name="phone" inputmode="tel"
+                                            pattern="\d{8,15}" required>
                                         <label for="signupPhone">رقم الهاتف</label>
                                         <span class="input-error" data-error-for="signupPhone"></span>
                                     </div>
                                     <div class="input-group">
-                                        <input type="password" id="signupPassword" name="password" minlength="6" required>
+                                        <input type="password" id="signupPassword" name="password" minlength="6"
+                                            required>
                                         <label for="signupPassword">كلمة المرور</label>
                                         <span class="input-error" data-error-for="signupPassword"></span>
                                     </div>
                                     <div class="input-group">
-                                        <input type="password" id="signupPasswordConfirm" name="passwordConfirm" minlength="6" required>
+                                        <input type="password" id="signupPasswordConfirm" name="passwordConfirm"
+                                            minlength="6" required>
                                         <label for="signupPasswordConfirm">تأكيد كلمة المرور</label>
                                         <span class="input-error" data-error-for="passwordConfirm"></span>
                                     </div>
-                                    <button type="submit" class="login-btn" id="signupSubmit" data-loading-text="جاري إنشاء الحساب...">انشاء حساب</button>
-                                    <div id="signupFormMessage" class="form-message" role="alert" aria-live="polite"></div>
+                                    <button type="submit" class="login-btn" id="signupSubmit"
+                                        data-loading-text="جاري إنشاء الحساب...">انشاء حساب</button>
+                                    <div id="signupFormMessage" class="form-message" role="alert" aria-live="polite">
+                                    </div>
                                 </form>
                             </div>
                         </div>
@@ -166,7 +175,7 @@
 
     <!-- ***** Main Banner Area Start ***** -->
     <div class="main-banner" id="top">
-        <video autoplay muted loop id="bg-video">
+        <video autoplay muted loop playsinline id="bg-video">
             <source src="assets/images/gym-video.mp4" type="video/mp4" />
         </video>
         <div class="video-overlay header-text">
@@ -251,19 +260,23 @@
                     <div class="cta-content" id="homepageBanner">
                         <div class="cta-banner-layout">
                             <div class="cta-banner-media">
-                                <img id="homepageBannerImage" src="assets/images/cta-bg.jpg" alt="عرض خاص من أكشن سبورتس">
+                                <img id="homepageBannerImage" src="assets/images/cta-bg.jpg"
+                                    alt="عرض خاص من أكشن سبورتس">
                             </div>
                             <div class="cta-banner-info">
                                 <h2 id="homepageBannerTitle">عرض خاص! <em>خصم 30%</em> على المشاية الكهربائية</h2>
-                                <p id="homepageBannerDescription">احصل على المشاية الكهربائية الذكية طراز X-25 الآن بخصم حصري. كمية محدودة!</p>
-                                                            </div>
+                                <p id="homepageBannerDescription">احصل على المشاية الكهربائية الذكية طراز X-25 الآن بخصم
+                                    حصري. كمية محدودة!</p>
+                            </div>
                         </div>
                         <div class="cta-banner-slider-controls" id="homepageBannerSlider" aria-live="polite">
-                            <button type="button" class="banner-nav-btn" id="homepageBannerPrev" aria-label="العرض السابق">
+                            <button type="button" class="banner-nav-btn" id="homepageBannerPrev"
+                                aria-label="العرض السابق">
                                 <i class="fa fa-chevron-right"></i>
                             </button>
                             <div class="banner-indicators" id="homepageBannerIndicators" role="tablist"></div>
-                            <button type="button" class="banner-nav-btn" id="homepageBannerNext" aria-label="العرض التالي">
+                            <button type="button" class="banner-nav-btn" id="homepageBannerNext"
+                                aria-label="العرض التالي">
                                 <i class="fa fa-chevron-left"></i>
                             </button>
                         </div>
@@ -278,8 +291,10 @@
                                     <label for="forgotPasswordEmail">البريد الإلكتروني</label>
                                     <span class="input-error" data-error-for="forgotPasswordEmail"></span>
                                 </div>
-                                <button type="submit" class="login-btn" id="forgotPasswordSubmit" data-loading-text="جاري الإرسال...">إرسال</button>
-                                <div id="forgotPasswordMessage" class="form-message" role="alert" aria-live="polite"></div>
+                                <button type="submit" class="login-btn" id="forgotPasswordSubmit"
+                                    data-loading-text="جاري الإرسال...">إرسال</button>
+                                <div id="forgotPasswordMessage" class="form-message" role="alert" aria-live="polite">
+                                </div>
                             </form>
                         </div>
                     </div>
@@ -290,12 +305,15 @@
                             <form id="otpForm">
                                 <p class="otp-instructions">أدخل رمز التحقق المرسل إلى بريدك الإلكتروني.</p>
                                 <div class="input-group">
-                                    <input type="text" id="otpCode" name="otpCode" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="أدخل رمز التحقق" required>
+                                    <input type="text" id="otpCode" name="otpCode" inputmode="numeric" pattern="[0-9]*"
+                                        maxlength="6" placeholder="أدخل رمز التحقق" required>
                                     <span class="input-error" data-error-for="otpCode"></span>
                                 </div>
-                                <button type="submit" class="login-btn" id="otpSubmit" data-loading-text="جاري التحقق...">تأكيد</button>
+                                <button type="submit" class="login-btn" id="otpSubmit"
+                                    data-loading-text="جاري التحقق...">تأكيد</button>
                                 <div class="resend-otp-container">
-                                    <button type="button" id="resendOtpBtn" class="resend-otp-btn">إعادة إرسال رمز التحقق</button>
+                                    <button type="button" id="resendOtpBtn" class="resend-otp-btn">إعادة إرسال رمز
+                                        التحقق</button>
                                     <span id="resendTimer" class="resend-timer"></span>
                                 </div>
                                 <div id="otpFormMessage" class="form-message" role="alert" aria-live="polite"></div>
@@ -314,12 +332,15 @@
                                     <span class="input-error" data-error-for="newPassword"></span>
                                 </div>
                                 <div class="input-group">
-                                    <input type="password" id="confirmPassword" name="confirmPassword" minlength="6" required>
+                                    <input type="password" id="confirmPassword" name="confirmPassword" minlength="6"
+                                        required>
                                     <label for="confirmPassword">تأكيد كلمة المرور</label>
                                     <span class="input-error" data-error-for="confirmPassword"></span>
                                 </div>
-                                <button type="submit" class="login-btn" id="resetPasswordSubmit" data-loading-text="جاري التحديث...">تحديث كلمة المرور</button>
-                                <div id="resetPasswordMessage" class="form-message" role="alert" aria-live="polite"></div>
+                                <button type="submit" class="login-btn" id="resetPasswordSubmit"
+                                    data-loading-text="جاري التحديث...">تحديث كلمة المرور</button>
+                                <div id="resetPasswordMessage" class="form-message" role="alert" aria-live="polite">
+                                </div>
                             </form>
                         </div>
                     </div>
@@ -344,57 +365,45 @@
                     <div class="col-lg-4 col-md-6">
                         <div class="product-card skeleton-card" aria-hidden="true">
                             <div class="skeleton skeleton-thumb"></div>
-                            <div class="down-content">
-                                <div class="skeleton-stack">
-                                    <span class="skeleton skeleton-chip"></span>
-                                    <div class="skeleton skeleton-line"></div>
-                                    <div class="skeleton skeleton-line short"></div>
-                                </div>
+                            <div class="skeleton-stack">
+                                <span class="skeleton skeleton-chip"></span>
+                                <div class="skeleton skeleton-line"></div>
+                                <div class="skeleton skeleton-line short"></div>
                                 <div class="skeleton skeleton-price"></div>
-                                <div class="product-buttons">
-                                    <div class="skeleton-button-group">
-                                        <span class="skeleton skeleton-button"></span>
-                                        <span class="skeleton skeleton-button"></span>
-                                    </div>
-                                </div>
+                            </div>
+                            <div class="skeleton-button-group">
+                                <span class="skeleton skeleton-button"></span>
+                                <span class="skeleton skeleton-button"></span>
                             </div>
                         </div>
                     </div>
                     <div class="col-lg-4 col-md-6">
                         <div class="product-card skeleton-card" aria-hidden="true">
                             <div class="skeleton skeleton-thumb"></div>
-                            <div class="down-content">
-                                <div class="skeleton-stack">
-                                    <span class="skeleton skeleton-chip"></span>
-                                    <div class="skeleton skeleton-line"></div>
-                                    <div class="skeleton skeleton-line short"></div>
-                                </div>
+                            <div class="skeleton-stack">
+                                <span class="skeleton skeleton-chip"></span>
+                                <div class="skeleton skeleton-line"></div>
+                                <div class="skeleton skeleton-line short"></div>
                                 <div class="skeleton skeleton-price"></div>
-                                <div class="product-buttons">
-                                    <div class="skeleton-button-group">
-                                        <span class="skeleton skeleton-button"></span>
-                                        <span class="skeleton skeleton-button"></span>
-                                    </div>
-                                </div>
+                            </div>
+                            <div class="skeleton-button-group">
+                                <span class="skeleton skeleton-button"></span>
+                                <span class="skeleton skeleton-button"></span>
                             </div>
                         </div>
                     </div>
                     <div class="col-lg-4 col-md-6">
                         <div class="product-card skeleton-card" aria-hidden="true">
                             <div class="skeleton skeleton-thumb"></div>
-                            <div class="down-content">
-                                <div class="skeleton-stack">
-                                    <span class="skeleton skeleton-chip"></span>
-                                    <div class="skeleton skeleton-line"></div>
-                                    <div class="skeleton skeleton-line short"></div>
-                                </div>
+                            <div class="skeleton-stack">
+                                <span class="skeleton skeleton-chip"></span>
+                                <div class="skeleton skeleton-line"></div>
+                                <div class="skeleton skeleton-line short"></div>
                                 <div class="skeleton skeleton-price"></div>
-                                <div class="product-buttons">
-                                    <div class="skeleton-button-group">
-                                        <span class="skeleton skeleton-button"></span>
-                                        <span class="skeleton skeleton-button"></span>
-                                    </div>
-                                </div>
+                            </div>
+                            <div class="skeleton-button-group">
+                                <span class="skeleton skeleton-button"></span>
+                                <span class="skeleton skeleton-button"></span>
                             </div>
                         </div>
                     </div>
@@ -425,7 +434,7 @@
                             src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d29003.718457307037!2d46.71291156523436!3d24.6765437!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3e2f03b2b8b8d843%3A0xbdbf8971459ad4fc!2sAction%20sports!5e0!3m2!1sar!2seg!4v1766749676492!5m2!1sar!2seg"
                             width="100%" height="600px" frameborder="0" allowfullscreen></iframe>
 
-                        </div>
+                    </div>
                 </div>
                 <div class="col-lg-6 col-md-6 col-xs-12">
                     <div class="contact-form">
@@ -534,8 +543,7 @@
                                 </div>
 
                                 <a href="https://mail.google.com/mail/?view=cm&fs=1&to=actionsports.ksa@gmail.com"
-                                    target="_blank"
-                                    rel="noopener noreferrer" dir="ltr" id="email-text"
+                                    target="_blank" rel="noopener noreferrer" dir="ltr" id="email-text"
                                     style="text-decoration: none; color: #5fabf8; margin-left: 8px;">
                                     actionsports.ksa@gmail.com
                                 </a>

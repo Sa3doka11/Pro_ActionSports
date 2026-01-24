@@ -10,6 +10,13 @@
 (function () {
     "use strict";
 
+    if (typeof window !== 'undefined' && typeof window.marked !== 'undefined' && typeof window.marked.setOptions === 'function') {
+        try {
+            window.marked.setOptions({ breaks: true, gfm: true });
+        } catch (_) {
+        }
+    }
+
     const FALLBACK_IMAGE = 'assets/images/product1.png';
     const IMAGE_VALUE_KEYS = [
         'image', 'imageCover', 'image_cover', 'imageUrl', 'image_url', 'imageURL',
@@ -417,8 +424,22 @@
             safeSetHTML(priceValue, sanitizeHtmlContent(priceMarkup));
         }
         if (productDescription) {
-            const formattedDescription = (product.description || '').replace(/\n/g, '<br>');
-            safeSetHTML(productDescription, formattedDescription);
+            productDescription.classList.add('markdown-content');
+            const rawDesc = typeof product.description === 'string' ? product.description : '';
+            const source = rawDesc ? rawDesc.replace(/\r\n/g, '\n') : '';
+            let html = '';
+            if (source) {
+                if (typeof window !== 'undefined' && window.marked && typeof window.marked.parse === 'function') {
+                    try {
+                        html = window.marked.parse(source);
+                    } catch (_) {
+                        html = source.replace(/\n/g, '<br>');
+                    }
+                } else {
+                    html = source.replace(/\n/g, '<br>');
+                }
+            }
+            safeSetHTML(productDescription, html || '');
         }
 
         if (brandDetailSection) {
@@ -440,23 +461,42 @@
 
         if (usageList) {
             safeSetHTML(usageList, '');
-            const normalizedSpecs = Array.isArray(product.specs)
-                ? product.specs.map(formatSpec).filter(Boolean)
-                : [];
-
-            if (normalizedSpecs.length) {
-                normalizedSpecs.forEach(spec => {
-                    const li = document.createElement('li');
-                    li.className = 'usage-spec-item';
-                    const formattedText = `${spec.label}: ${spec.value}`.replace(/\n/g, '<br>');
-                    safeSetHTML(li, formattedText);
-                    usageList.appendChild(li);
-                });
-            } else {
+            const specsProp = product.specs;
+            if (typeof specsProp === 'string' && specsProp.trim()) {
                 const li = document.createElement('li');
-                li.textContent = 'لا توجد مواصفات تقنية متاحة.';
-                li.classList.add('usage-specs-empty');
+                li.className = 'usage-spec-item markdown-content';
+                const source = specsProp.replace(/\r\n/g, '\n');
+                let html = '';
+                if (typeof window !== 'undefined' && window.marked && typeof window.marked.parse === 'function') {
+                    try {
+                        html = window.marked.parse(source);
+                    } catch (_) {
+                        html = source.replace(/\n/g, '<br>');
+                    }
+                } else {
+                    html = source.replace(/\n/g, '<br>');
+                }
+                safeSetHTML(li, html);
                 usageList.appendChild(li);
+            } else {
+                const normalizedSpecs = Array.isArray(specsProp)
+                    ? specsProp.map(formatSpec).filter(Boolean)
+                    : [];
+
+                if (normalizedSpecs.length) {
+                    normalizedSpecs.forEach(spec => {
+                        const li = document.createElement('li');
+                        li.className = 'usage-spec-item';
+                        const formattedText = `${spec.label}: ${spec.value}`.replace(/\n/g, '<br>');
+                        safeSetHTML(li, formattedText);
+                        usageList.appendChild(li);
+                    });
+                } else {
+                    const li = document.createElement('li');
+                    li.textContent = 'لا توجد مواصفات تقنية متاحة.';
+                    li.classList.add('usage-specs-empty');
+                    usageList.appendChild(li);
+                }
             }
         }
 
@@ -545,15 +585,17 @@
             rawProduct.details?.highlights
         );
 
-        const specs = mergeSpecLists(
-            rawProduct.specifications,
-            rawProduct.specs,
-            rawProduct.technicalSpecifications,
-            rawProduct.techSpecs,
-            rawProduct.details?.specifications,
-            rawProduct.details?.technicalSpecifications,
-            rawProduct.details?.specs
-        );
+        const specs = (typeof rawProduct.specs === 'string' && rawProduct.specs.trim())
+            ? rawProduct.specs
+            : mergeSpecLists(
+                rawProduct.specifications,
+                rawProduct.specs,
+                rawProduct.technicalSpecifications,
+                rawProduct.techSpecs,
+                rawProduct.details?.specifications,
+                rawProduct.details?.technicalSpecifications,
+                rawProduct.details?.specs
+            );
 
         const usage = mergeStringLists(
             rawProduct.usage,
@@ -875,6 +917,10 @@
 
     function formatDetailItem(listItem) {
         if (!listItem) {
+            return;
+        }
+
+        if (listItem.classList && listItem.classList.contains('markdown-content')) {
             return;
         }
 

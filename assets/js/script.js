@@ -1,4 +1,4 @@
-    initContactForm();
+initContactForm();
 function getContactFormElement() {
     if (typeof document === 'undefined') return null;
     return document.getElementById('contact');
@@ -26,7 +26,7 @@ function handleContactFormSubmit(event) {
         return;
     }
 
-    if (submitButton) { 
+    if (submitButton) {
         submitButton.disabled = true;
         safeSetHTML(submitButton, '<i class="fa fa-spinner fa-spin"></i> جارٍ الإرسال...');
     }
@@ -170,7 +170,7 @@ function getHomepageBannerElements() {
         container: document.getElementById('homepageBanner'),
         title: document.getElementById('homepageBannerTitle'),
         description: document.getElementById('homepageBannerDescription'),
-                section: document.getElementById('call-to-action'),
+        section: document.getElementById('call-to-action'),
         image: document.getElementById('homepageBannerImage'),
         indicatorsContainer: document.getElementById('homepageBannerIndicators'),
         prevButton: document.getElementById('homepageBannerPrev'),
@@ -209,7 +209,7 @@ function applyHomepageBannerToUI(banner) {
         }
     }
 
-    
+
     if (image) {
         if (banner.backgroundImage) {
             image.src = banner.backgroundImage;
@@ -380,7 +380,7 @@ async function loadHomepageBanner() {
         // ✅ Auth errors (401/403) should not show popup
         const statusCode = error?.status || 0;
         const isAuthError = statusCode === 401 || statusCode === 403;
-        
+
         if (!isAuthError) {
             // ✅ For non-auth errors on critical data, show popup
             if (typeof window.showServerErrorPopup === 'function') {
@@ -587,11 +587,11 @@ function updateGuestCartItemQuantity(itemId, quantity) {
     return getGuestCartSnapshot();
 }
 
-function removeGuestCartItem(itemId) {
+function removeGuestCartItem(itemId, options = {}) {
     const items = readGuestCartItems();
     const nextItems = items.filter(item => item.id !== itemId);
     writeGuestCartItems(nextItems);
-    syncGuestCartState();
+    syncGuestCartState(options);
     return getGuestCartSnapshot();
 }
 
@@ -626,6 +626,10 @@ const cartState = {
     isLoaded: false,
     error: null
 };
+
+// Debounce state for cart quantity updates
+const cartDebounceTimers = new Map(); // itemId -> timeoutId
+const DEBOUNCE_DELAY_MS = 500;
 
 function sanitizePrice(rawPrice) {
     if (rawPrice === undefined || rawPrice === null || rawPrice === '') {
@@ -793,7 +797,12 @@ function normalizeCartSnapshot(payload) {
         const productId = productObject._id || productObject.id || item?.productId || item?.id || `product-${index}`;
         const cartItemId = item?._id || item?.id || item?.cartItemId || productId || `cart-item-${index}`;
         const quantity = Number(item?.quantity ?? item?.qty ?? item?.count ?? 1) || 1;
-        const priceSource = item?.price?.current ?? item?.price?.value ?? item?.price ?? item?.unitPrice ?? productObject?.price ?? 0;
+        // Extract prices: prioritize unitPrice (discounted) from cart item, then priceAfterDiscount from product
+        const discountedPriceSource = item?.unitPrice ?? item?.priceAfterDiscount ?? productObject?.priceAfterDiscount ?? productObject?.discountedPrice;
+        const originalPriceFromProduct = productObject?.price ?? item?.price;
+
+        // Use discounted price as the effective price if available, otherwise use original
+        const priceSource = discountedPriceSource ?? originalPriceFromProduct ?? 0;
         let price = Number(sanitizePrice(priceSource));
         let name = item?.name || productObject?.name || item?.productName || '';
         const imageSource = productObject?.image || productObject?.mainImage || productObject?.thumbnail || item?.image;
@@ -840,6 +849,56 @@ function normalizeCartSnapshot(payload) {
             price = 0;
         }
 
+        // Extract stock/inventory count - prioritize productObject.quantity
+        const stockSource =
+            productObject?.quantity ??
+            item?.stock ??
+            item?.countInStock ??
+            item?.inventory ??
+            item?.availableQuantity ??
+            productObject?.stock ??
+            productObject?.countInStock ??
+            productObject?.inventory ??
+            productObject?.availableQuantity ??
+            item?.product?.countInStock ??
+            item?.product?.stock;
+        const stock = Number(stockSource);
+        const finalStock = Number.isFinite(stock) && stock >= 0 ? stock : 999;
+
+        // Extract original price for discount display - productObject.price is the original price
+        const originalPriceSource =
+            productObject?.price ??
+            item?.originalPrice ??
+            item?.price?.original ??
+            item?.price?.before ??
+            item?.regularPrice ??
+            item?.basePrice ??
+            productObject?.originalPrice ??
+            productObject?.regularPrice ??
+            productObject?.basePrice ??
+            item?.product?.originalPrice ??
+            item?.product?.regularPrice ??
+            item?.product?.price;
+        const originalPrice = Number(sanitizePrice(originalPriceSource));
+        const finalOriginalPrice = Number.isFinite(originalPrice) && originalPrice > 0 ? originalPrice : price;
+
+        // Extract sale/discounted price - priceAfterDiscount or unitPrice
+        const salePriceSource =
+            item?.unitPrice ??
+            productObject?.priceAfterDiscount ??
+            item?.priceAfterDiscount ??
+            item?.salePrice ??
+            item?.discountedPrice ??
+            item?.price?.sale ??
+            item?.price?.discounted ??
+            productObject?.salePrice ??
+            productObject?.discountedPrice ??
+            item?.product?.salePrice ??
+            item?.product?.discountedPrice ??
+            item?.product?.priceAfterDiscount;
+        const salePrice = Number(sanitizePrice(salePriceSource));
+        const finalSalePrice = Number.isFinite(salePrice) && salePrice > 0 ? salePrice : null;
+
         const normalizedItem = {
             id: cartItemId,
             productId,
@@ -848,6 +907,9 @@ function normalizeCartSnapshot(payload) {
             name,
             image: resolvedImage,
             installationPrice,
+            stock: finalStock,
+            originalPrice: finalOriginalPrice,
+            salePrice: finalSalePrice,
             raw: item,
             total: Number((Number.isFinite(price) ? price : 0) * quantity)
         };
@@ -1041,21 +1103,46 @@ async function updateCartItemQuantity(itemId, quantity) {
         const response = await patchJson(CART_ENDPOINTS.item(itemId), { quantity });
         const snapshot = normalizeCartSnapshot(response);
 
-        if (snapshot.items.length) {
-            applyCartSnapshot(snapshot);
-        } else {
-            await refreshCartState(true);
-        }
+        // CRITICAL: Only update totals, don't re-render items (prevents flicker)
+        updateCartTotalsOnly(snapshot);
     } catch (error) {
         throw error;
     }
 }
 
-async function removeCartItem(itemId) {
+// Silent version for debounced calls
+async function updateCartItemQuantitySilent(itemId, quantity) {
+    try {
+        return await updateCartItemQuantity(itemId, quantity);
+    } catch (error) {
+        throw error; // Re-throw for debounce handler to catch
+    }
+}
+
+function updateCartTotalsOnly(snapshot) {
+    // Update cart ID and totals without touching items array
+    if (snapshot.id) {
+        cartState.id = snapshot.id;
+    }
+
+    if (snapshot.totals) {
+        cartState.totals = snapshot.totals;
+    }
+
+    // Update header indicators
+    updateCartIndicators();
+
+    // Dispatch event but prevent full re-render
+    document.dispatchEvent(new CustomEvent('cart:totals:updated', {
+        detail: { totals: snapshot.totals }
+    }));
+}
+
+async function removeCartItem(itemId, options = {}) {
     if (!itemId) throw new Error('itemId is required');
 
     if (!isAuthenticated()) {
-        return removeGuestCartItem(itemId);
+        return removeGuestCartItem(itemId, options);
     }
 
     try {
@@ -1063,7 +1150,7 @@ async function removeCartItem(itemId) {
         const snapshot = normalizeCartSnapshot(response);
 
         if (snapshot.items.length || snapshot.totals.total) {
-            applyCartSnapshot(snapshot);
+            applyCartSnapshot(snapshot, options);
         } else {
             await refreshCartState(true);
         }
@@ -1090,6 +1177,14 @@ async function clearCartContents() {
     } catch (error) {
         throw error;
     }
+}
+
+// Expose cart functions globally for use by cart.js
+if (typeof window !== 'undefined') {
+    window.updateCartItemQuantity = updateCartItemQuantity;
+    window.removeCartItem = removeCartItem;
+    window.getCartItemCount = getCartItemCount;
+    window.refreshCartState = refreshCartState;
 }
 
 // ===================================================================
@@ -1162,7 +1257,7 @@ function cleanupLocalStorage() {
             keys.forEach(key => {
                 if (!ALLOWED_KEYS.includes(key)) {
                     // Check if it's a sensitive pattern
-                    if (key.includes('auth') || key.includes('token') || key.includes('user') || 
+                    if (key.includes('auth') || key.includes('token') || key.includes('user') ||
                         key.includes('password') || key.includes('cart') || key.includes('favorite')) {
                         localStorage.removeItem(key);
                     }
@@ -1186,15 +1281,15 @@ if (typeof window !== 'undefined') {
 // ===================================================================
 function sanitizeHtmlContent(html) {
     if (typeof html !== 'string') return '';
-    
+
     // If DOMPurify is available, use it
     if (typeof window !== 'undefined' && typeof window.DOMPurify !== 'undefined' && typeof window.DOMPurify.sanitize === 'function') {
-        return window.DOMPurify.sanitize(html, { 
+        return window.DOMPurify.sanitize(html, {
             ALLOWED_TAGS: ['div', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'span', 'br', 'strong', 'em', 'i', 'u', 'b', 'ul', 'ol', 'li', 'a', 'img', 'table', 'tbody', 'thead', 'tfoot', 'tr', 'td', 'th', 'caption', 'form', 'button', 'input', 'textarea', 'select', 'option', 'label', 'fieldset', 'legend', 'video', 'source', 'audio', 'picture', 'figure', 'figcaption', 'section', 'article', 'nav', 'footer', 'header'],
             ALLOWED_ATTR: ['class', 'id', 'role', 'data-*', 'href', 'src', 'alt', 'title', 'type', 'name', 'value', 'checked', 'disabled', 'selected', 'action', 'method', 'enctype', 'controls', 'aria-*', 'target', 'rel', 'datetime', 'width', 'height', 'loading', 'poster']
         });
     }
-    
+
     // If DOMPurify is not available, return empty string for security
     return '';
 }
@@ -1516,7 +1611,7 @@ if (typeof document !== 'undefined') {
 function getCookie(name) {
     const nameEQ = encodeURIComponent(name) + "=";
     const cookies = document.cookie.split(';');
-    for(let i = 0; i < cookies.length; i++) {
+    for (let i = 0; i < cookies.length; i++) {
         let cookie = cookies[i].trim();
         if (cookie.indexOf(nameEQ) === 0) {
             return decodeURIComponent(cookie.substring(nameEQ.length));
@@ -1555,10 +1650,10 @@ let cookiesReadyPromise = null;
 async function ensureCookiesReady() {
     // If already ready, return immediately
     if (cookiesReady) return true;
-    
+
     // If already checking, wait for that promise
     if (cookiesReadyPromise) return cookiesReadyPromise;
-    
+
     // Create a promise that resolves when cookies are ready
     cookiesReadyPromise = new Promise((resolve) => {
         // Make a simple request to verify cookies work
@@ -1582,11 +1677,11 @@ async function ensureCookiesReady() {
                 setTimeout(checkCookies, 50);
             }
         };
-        
+
         // Start the check - first one runs immediately with minimal delay
         setTimeout(checkCookies, 10);
     });
-    
+
     return cookiesReadyPromise;
 }
 
@@ -1596,7 +1691,7 @@ async function refreshAccessToken() {
     if (isRefreshing) {
         return refreshPromise;
     }
-    
+
     // Prevent infinite refresh loops
     if (refreshAttemptCount >= MAX_REFRESH_ATTEMPTS) {
         clearAuthUser();
@@ -1747,7 +1842,7 @@ async function getJson(url) {
         if (response.status === 401 && (url.includes('/users/me') || url.includes('users'))) {
             return null;
         }
-        
+
         // لـ /orders/me - إذا 401، يعني الـ token مش شغالة أو انتهت
         // دعنا نحاول refresh ونعيد المحاولة
         if (response.status === 401 && url.includes('/orders/me')) {
@@ -1765,7 +1860,7 @@ async function getJson(url) {
             } catch (refreshError) {
             }
         }
-        
+
         const message = payload?.message || 'حدث خطأ غير متوقع';
         const errors = payload?.errors || null;
         const error = new Error(message);
@@ -2110,22 +2205,22 @@ let resendTimeLeft = 60; // 60 seconds cooldown
 function startResendTimer() {
     const resendBtn = document.getElementById('resendOtpBtn');
     const timerElement = document.getElementById('resendTimer');
-    
+
     if (resendTimer) {
         clearInterval(resendTimer);
     }
-    
+
     resendTimeLeft = 60;
     updateTimerDisplay();
-    
+
     if (resendBtn) {
         resendBtn.disabled = true;
     }
-    
+
     resendTimer = setInterval(() => {
         resendTimeLeft--;
         updateTimerDisplay();
-        
+
         if (resendTimeLeft <= 0) {
             clearInterval(resendTimer);
             if (resendBtn) {
@@ -2154,7 +2249,7 @@ function updateTimerDisplay() {
 function initResendOtpButton() {
     const resendBtn = document.getElementById('resendOtpBtn');
     if (!resendBtn) return;
-    
+
     resendBtn.addEventListener('click', async () => {
         const isAccountVerification = !!accountVerificationState.isVerifying;
         const email = isAccountVerification
@@ -2174,7 +2269,7 @@ function initResendOtpButton() {
         try {
             resendBtn.disabled = true;
             resendBtn.textContent = 'جاري الإرسال...';
-            
+
             if (isAccountVerification) {
                 await handleResendVerificationCode(email);
             } else {
@@ -2217,33 +2312,33 @@ document.addEventListener('DOMContentLoaded', () => {
 async function showAccountVerificationPopup(email) {
     accountVerificationState.email = email;
     accountVerificationState.isVerifying = true;
-    
+
     const otpForm = document.getElementById('otpForm');
     const otpMessage = document.getElementById('otpFormMessage');
     const otpInput = document.getElementById('otpCode');
-    
+
     if (otpForm) {
         otpForm.reset();
         clearFormErrors(otpForm);
     }
-    
+
     if (otpMessage) {
         setMessage(otpMessage, 'تم إرسال رمز التحقق إلى بريدك الإلكتروني', 'info');
     }
-    
+
     if (otpInput) {
         otpInput.focus();
     }
-    
+
     // Start the resend timer when showing the popup
     startResendTimer();
-    
+
     // إغلاق popups الأخرى بطريقة آمنة
     const signupPopup = document.getElementById('signupPopup');
     const loginPopup = document.getElementById('loginPopup');
     if (signupPopup) signupPopup.style.display = 'none';
     if (loginPopup) loginPopup.style.display = 'none';
-    
+
     const otpPopup = document.getElementById('otpPopup');
     if (otpPopup) {
         otpPopup.removeAttribute('hidden');
@@ -2258,36 +2353,36 @@ async function handleAccountVerification(otpCode) {
     const otpMessage = document.getElementById('otpFormMessage');
     const otpSubmit = otpForm?.querySelector('#otpSubmit');
     const email = accountVerificationState.email;
-    
+
     if (!email || !otpCode.trim()) {
         setMessage(otpMessage, 'يرجى إدخال البريد الإلكتروني ورمز التحقق', 'error');
         return;
     }
-    
+
     if (otpSubmit) {
         toggleLoading(otpSubmit, true);
     }
-    
+
     try {
         const payload = {
             email: email,
             otp: otpCode.trim()
         };
-        
+
         const result = await postJson(AUTH_ENDPOINTS.verifyAccount, payload);
-        
+
         setMessage(otpMessage, result?.message || 'تم التحقق من الحساب بنجاح', 'success');
-        
+
         try {
             await ensureAuthUserLoaded(true);
         } catch (profileError) {
             setAuthUser(extractAuthUser(result));
         }
-        
+
         if (otpForm) {
             otpForm.reset();
         }
-        
+
         setTimeout(() => {
             const otpPopup = document.getElementById('otpPopup');
             if (otpPopup) {
@@ -2298,7 +2393,7 @@ async function handleAccountVerification(otpCode) {
             updateAuthUI();
             handlePostLoginRedirect();
         }, 1500);
-        
+
     } catch (error) {
         const validationErrors = mapValidationErrors(error.errors);
         setFieldErrors(otpForm, validationErrors);
@@ -2525,7 +2620,7 @@ async function handleLogout() {
     // ✅ حذف الـ tokens من الـ cookies
     removeCookie('accessToken');
     removeCookie('refreshToken');
-    
+
     // ✅ تنظيف جميع البيانات الحساسة من localStorage و sessionStorage
     try {
         const SENSITIVE_KEYS = [
@@ -2544,7 +2639,7 @@ async function handleLogout() {
             'redirectAfterLogin',
             'actionSportsInstallmentSummary'
         ];
-        
+
         SENSITIVE_KEYS.forEach(key => {
             localStorage.removeItem(key);
             sessionStorage.removeItem(key);
@@ -2552,7 +2647,7 @@ async function handleLogout() {
     } catch (e) {
         // Storage cleanup error - continue logout
     }
-    
+
     clearAuthUser();
     clearRedirectAfterLogin();
     if (typeof hidePopup === 'function') {
@@ -2603,7 +2698,7 @@ function setupAuthActionHandlers() {
             if (isAuthenticated()) {
                 return; // دع الرابط العادي يعمل
             }
-            
+
             // إذا كان مش مسجل دخول، اطلب تسجيل الدخول
             event.preventDefault();
             setRedirectAfterLogin('cart.html');
@@ -2618,10 +2713,10 @@ function setupAuthActionHandlers() {
 // إعادة التوجيه بعد الدخول أو تحديث الصفحة حسب الحالة
 function handlePostLoginRedirect(fallbackUrl = null) {
     const redirectUrl = consumeRedirectAfterLogin();
-    
+
     // تحديث الكارت بعد الدخول
-    refreshCartState(true).catch(() => {});
-    
+    refreshCartState(true).catch(() => { });
+
     // إذا كان هناك redirect معين (مثل عند الضغط على رابط محمي)، توجه له
     if (redirectUrl) {
         window.location.href = redirectUrl;
@@ -2653,7 +2748,7 @@ document.addEventListener('DOMContentLoaded', () => {
         sessionStorage.removeItem(POST_LOGIN_RELOAD_KEY);
     }
     const onCartPage = window.location.pathname.endsWith('cart.html');
-    
+
     // ✅ CRITICAL: Wait for cookies FIRST before attempting auth
     // This ensures httpOnly cookies are available before ensureAuthUserLoaded()
     ensureCookiesReady()
@@ -2665,12 +2760,12 @@ document.addEventListener('DOMContentLoaded', () => {
             updateAuthUI();
             handleProtectedPageAccess();
             // تحميل الكارت بعد التحقق من الدخول
-            return refreshCartState(true).catch(() => {});
+            return refreshCartState(true).catch(() => { });
         })
         .catch(() => {
             updateAuthUI(); // Update UI even if auth fails
             handleProtectedPageAccess();
-            refreshCartState(true).catch(() => {});
+            refreshCartState(true).catch(() => { });
         });
 
     loadHomepageBanner();
@@ -2691,17 +2786,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
             try {
                 const result = await postJson(AUTH_ENDPOINTS.signIn, payload);
-                
+
                 // التحقق من ما إذا كان الحساب يحتاج تحقق
                 const isAccountUnverified = result?.requiresVerification || result?.data?.requiresVerification || result?.status === 'unverified' || result?.data?.status === 'unverified';
-                
+
                 if (isAccountUnverified) {
                     // الحساب غير مؤكد - عرض popup التحقق
                     setMessage(messageBox, '', '');
-                    
+
                     // حفظ البريد الإلكتروني للتحقق لاحقاً
                     accountVerificationState.email = payload.email;
-                    
+
                     // عرض popup التحقق
                     setTimeout(() => {
                         showAccountVerificationPopup(payload.email);
@@ -2710,56 +2805,56 @@ document.addEventListener('DOMContentLoaded', () => {
                             setMessage(otpMessage, 'تم إرسال رمز التحقق إلى بريدك الإلكتروني. يرجى إدخاله', 'info');
                         }
                     }, 800);
-                    
+
                     return;
                 }
-                
+
                 // الحساب مؤكد - إكمال عملية الدخول
                 setMessage(messageBox, result?.message || 'تم تسجيل الدخول بنجاح', 'success');
-                
+
                 try {
                     await ensureAuthUserLoaded(true);
                 } catch (profileError) {
                     setAuthUser(extractAuthUser(result));
                 }
-                
+
                 // تحديث الكارت بعد الـ login
                 try {
                     await refreshCartState(true);
                 } catch (cartError) {
                 }
-                
+
                 loginForm.reset();
                 hidePopup('login');
                 updateAuthUI();
                 handleProtectedPageAccess();
                 handlePostLoginRedirect();
             } catch (error) {
-                
+
                 // التحقق من ما إذا كان الخطأ بسبب حساب غير مؤكد
                 const isUnverifiedError = error?.status === 403 || error?.message?.includes('unverified') || error?.message?.includes('verify');
-                
+
                 if (isUnverifiedError) {
                     const email = document.querySelector('#loginEmail')?.value || '';
                     if (email) {
                         accountVerificationState.email = email;
-                        
+
                         const resendBtn = document.createElement('button');
                         resendBtn.type = 'button';
                         resendBtn.className = 'resend-verification-btn';
                         resendBtn.textContent = 'إعادة إرسال رمز التحقق';
                         resendBtn.style.marginTop = '10px';
                         resendBtn.style.width = '100%';
-                        
+
                         resendBtn.addEventListener('click', async () => {
                             try {
                                 resendBtn.disabled = true;
                                 resendBtn.textContent = 'جاري الإرسال...';
-                                
+
                                 await handleResendVerificationCode(email);
-                                
+
                                 setMessage(messageBox, 'تم إرسال رمز التحقق إلى بريدك الإلكتروني', 'success');
-                                
+
                                 setTimeout(() => {
                                     showAccountVerificationPopup(email);
                                 }, 1500);
@@ -2769,7 +2864,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 resendBtn.textContent = 'إعادة إرسال رمز التحقق';
                             }
                         });
-                        
+
                         // إضافة الزر إلى رسالة الخطأ
                         const errorContainer = messageBox.parentElement;
                         if (errorContainer && !errorContainer.querySelector('.resend-verification-btn')) {
@@ -2777,7 +2872,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
                     }
                 }
-                
+
                 const validationErrors = mapValidationErrors(error.errors);
                 setFieldErrors(loginForm, validationErrors);
                 const message = error.status === 401
@@ -2817,15 +2912,15 @@ document.addEventListener('DOMContentLoaded', () => {
             try {
                 const result = await postJson(AUTH_ENDPOINTS.signUp, payload);
                 setMessage(messageBox, result?.message || 'تم إنشاء الحساب بنجاح. يرجى التحقق من بريدك الإلكتروني', 'success');
-                
+
                 try {
                     await ensureAuthUserLoaded(true);
                 } catch (profileError) {
                     setAuthUser(extractAuthUser(result));
                 }
-                
+
                 signupForm.reset();
-                
+
                 // عرض popup التحقق من الحساب
                 const email = payload.email || extractAuthUser(result)?.email || '';
                 if (email) {
@@ -3028,7 +3123,7 @@ document.addEventListener('auth:user-updated', () => {
 
             window.addEventListener('scroll', function () {
                 const scroll = window.scrollY;
-                if (scroll >= boxHeight - 1.4*headerHeight) {
+                if (scroll >= boxHeight - 1.4 * headerHeight) {
                     header.classList.add("background-header");
                 } else {
                     header.classList.remove("background-header");
@@ -3103,6 +3198,12 @@ document.addEventListener('auth:user-updated', () => {
                 focusable.focus();
             }
         } else {
+            // ACCESSIBILITY FIX: Blur any focused element inside popup before hiding
+            // to prevent "aria-hidden retained focus" warning
+            const activeElement = popup.querySelector(':focus');
+            if (activeElement) {
+                activeElement.blur();
+            }
             popup.setAttribute('inert', '');
         }
     }
@@ -3115,7 +3216,7 @@ document.addEventListener('auth:user-updated', () => {
     }
 
     // Show login/signup popup based on requested type
-    window.showPopup = function(type) {
+    window.showPopup = function (type) {
         const loginPopup = document.getElementById('loginPopup');
         const signupPopup = document.getElementById('signupPopup');
         const forgotPopup = document.getElementById('forgotPasswordPopup');
@@ -3140,7 +3241,7 @@ document.addEventListener('auth:user-updated', () => {
     };
 
     // Hide login/signup popup of given type
-    window.hidePopup = function(type) {
+    window.hidePopup = function (type) {
         if (!type) {
             hideAllPopups();
             return;
@@ -3153,6 +3254,60 @@ document.addEventListener('auth:user-updated', () => {
     /* ===================================================================
     3. Shopping Cart Sidebar
     =================================================================== */
+
+    // Show professional modal when user reaches max stock limit
+    function showStockLimitModal(productName, maxStock) {
+        // Remove existing modal if any
+        const existingModal = document.querySelector('.stock-limit-modal-overlay');
+        if (existingModal) existingModal.remove();
+
+        const modalHtml = `
+            <div class="stock-limit-modal-overlay">
+                <div class="stock-limit-modal">
+                    <div class="stock-limit-icon">
+                        <i class="fa fa-box-open"></i>
+                    </div>
+                    <h3>وصلت للحد الأقصى</h3>
+                    <p class="stock-limit-product">${sanitizeHtmlContent(productName)}</p>
+                    <p class="stock-limit-message">
+                        المخزون المتاح حالياً: <strong>${maxStock} قطعة</strong>
+                    </p>
+                    <p class="stock-limit-help">للكميات الأكبر، تواصل معنا للحجز المسبق</p>
+                    <div class="stock-limit-actions">
+                        <button class="stock-limit-close-btn">حسناً</button>
+                        <a href="./contact.html" class="stock-limit-contact-btn">
+                            <i class="fa fa-headset"></i> تواصل معنا
+                        </a>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        const modalContainer = document.createElement('div');
+        modalContainer.innerHTML = modalHtml;
+        const modal = modalContainer.firstElementChild;
+        document.body.appendChild(modal);
+
+        // Show modal with animation
+        requestAnimationFrame(() => {
+            modal.classList.add('visible');
+        });
+
+        // Close handlers
+        const closeBtn = modal.querySelector('.stock-limit-close-btn');
+        closeBtn.addEventListener('click', () => {
+            modal.classList.remove('visible');
+            setTimeout(() => modal.remove(), 200);
+        });
+
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.classList.remove('visible');
+                setTimeout(() => modal.remove(), 200);
+            }
+        });
+    }
+
     // Control cart sidebar open/close and quantity actions
     function handleCartSidebar() {
         const cartIcon = document.getElementById('cart-icon');
@@ -3191,41 +3346,238 @@ document.addEventListener('auth:user-updated', () => {
             if (!cartItemsList) return;
             const { items } = cartState;
 
-            safeSetHTML(cartItemsList, '');
+            cartItemsList.innerHTML = '';
 
             if (cartState.isLoading && !cartState.isLoaded) {
-                safeSetHTML(cartItemsList, '<p class="cart-loading-msg">جاري تحميل السلة...</p>');
+                cartItemsList.innerHTML = '<p class="cart-loading-msg">جاري تحميل السلة...</p>';
                 return;
             }
 
             if (!items.length) {
-                safeSetHTML(cartItemsList, '<p class="cart-empty-msg">سلة المشتريات فارغة.</p>');
+                cartItemsList.innerHTML = '<p class="cart-empty-msg">سلة المشتريات فارغة.</p>';
                 return;
             }
+
+            // Calculate total savings for the popup header
+            let totalSavings = 0;
+            items.forEach(item => {
+                const origPrice = parseFloat(item.originalPrice) || 0;
+                const effPrice = parseFloat(item.salePrice ?? item.price) || 0;
+                const qty = parseInt(item.quantity, 10) || 0;
+                if (origPrice > effPrice && effPrice > 0) {
+                    totalSavings += (origPrice - effPrice) * qty;
+                }
+            });
 
             items.forEach(item => {
                 const element = document.createElement('div');
                 element.className = 'cart-item';
                 element.dataset.itemId = item.id;
                 element.dataset.productId = item.productId || '';
+
+                // Stock limit check
+                const stock = parseInt(item.stock ?? 999, 10);
+                element.dataset.stock = stock;
+                const isAtMaxStock = item.quantity >= stock;
+
+                // Discount price display
+                const originalPrice = parseFloat(item.originalPrice) || 0;
+                const effectivePrice = parseFloat(item.salePrice ?? item.price) || 0;
+                const hasDiscount = originalPrice > effectivePrice && effectivePrice > 0;
+
+                // Build price HTML
+                let priceHtml = '';
+                if (hasDiscount) {
+                    priceHtml = `
+                        <span class="cart-item-price-original">${formatPrice(originalPrice)}</span>
+                        <span class="cart-item-price-current">${formatPrice(effectivePrice)}</span>
+                    `;
+                } else {
+                    priceHtml = `<span class="cart-item-price-current">${formatPrice(item.price)}</span>`;
+                }
+
                 const cartItemHtml = `
                     <img src="${sanitizeHtmlContent(item.image)}" alt="${sanitizeHtmlContent(item.name)}">
                     <div class="cart-item-details">
                         <h4>${sanitizeHtmlContent(item.name)}</h4>
-                        <p>${formatPrice(item.price)} </p>
+                        <p class="cart-item-price-container">${priceHtml}</p>
                     </div>
                     <div class="cart-item-actions">
-                        <button class="quantity-btn decrease-btn" aria-label="تقليل الكمية">−</button>
+                        <button class="quantity-btn remove-item-btn" aria-label="حذف المنتج"><i class="fa-regular fa-trash-can"></i></button>
+                        <button class="quantity-btn decrease-btn" aria-label="تقليل الكمية"><i class="fa-solid fa-minus"></i></button>
                         <span class="quantity-display">${item.quantity}</span>
-                        <button class="quantity-btn increase-btn" aria-label="زيادة الكمية">+</button>
-                        <button class="remove-item-btn" aria-label="إزالة المنتج">🗑</button>
+                        <button class="quantity-btn increase-btn" aria-label="زيادة الكمية"${isAtMaxStock ? ' disabled' : ''}><i class="fa-solid fa-plus"></i></button>
                     </div>
                 `;
-                safeSetHTML(element, sanitizeHtmlContent(cartItemHtml));
+                element.innerHTML = cartItemHtml;
                 cartItemsList.appendChild(element);
             });
 
+            // Show savings in cart popup if any
+            const existingSavings = document.querySelector('.cart-popup-savings');
+            if (existingSavings) existingSavings.remove();
+
+            if (totalSavings > 0) {
+                const savingsEl = document.createElement('div');
+                savingsEl.className = 'cart-popup-savings';
+                const currencyIcon = '<img src="./assets/images/Saudi_Riyal_Symbol.png" alt="ريال" class="saudi-riyal-symbol riyal-inline-fix">';
+                savingsEl.innerHTML = `<i class="fa fa-tag"></i> وفرت: ${formatPrice(totalSavings)} ${currencyIcon}`;
+                cartItemsList.parentNode.insertBefore(savingsEl, cartItemsList.nextSibling);
+            }
+
             updateCartIndicators();
+        }
+
+        // Handle increment/decrement/remove clicks via event delegation
+        function updateCartItemUIInstantly(itemId, newQuantity) {
+            // Find item in local state
+            const itemIndex = cartState.items.findIndex(item => item.id === itemId);
+            if (itemIndex === -1) return;
+
+            const item = cartState.items[itemIndex];
+            const unitPrice = parseFloat(item.price) || 0;
+
+            // Find the cart item element in DOM
+            const cartItemEl = document.querySelector(`.cart-item[data-item-id="${itemId}"]`);
+
+            if (newQuantity <= 0) {
+                // Remove from local state
+                cartState.items.splice(itemIndex, 1);
+                // Remove from DOM
+                if (cartItemEl) {
+                    cartItemEl.remove();
+                }
+            } else {
+                // Update quantity in local state
+                cartState.items[itemIndex].quantity = newQuantity;
+
+                // Update quantity display in DOM directly
+                if (cartItemEl) {
+                    const quantityDisplay = cartItemEl.querySelector('.quantity-display');
+                    if (quantityDisplay) {
+                        quantityDisplay.textContent = newQuantity;
+                    }
+
+                    // Calculate and update item subtotal INSTANTLY
+                    const newSubtotal = unitPrice * newQuantity;
+                    const priceDisplay = cartItemEl.querySelector('.cart-item-details p');
+                    if (priceDisplay) {
+                        safeSetHTML(priceDisplay, `${formatPrice(newSubtotal)}`);
+                    }
+
+                    // Update increase button disabled state based on stock
+                    const maxStock = parseInt(item.stock ?? cartItemEl.dataset.stock ?? 999, 10);
+                    const increaseBtn = cartItemEl.querySelector('.increase-btn');
+                    if (increaseBtn) {
+                        increaseBtn.disabled = newQuantity >= maxStock;
+                    }
+                }
+            }
+
+            // Update cart count in header
+            const cartCountEl = document.getElementById('cart-count');
+            if (cartCountEl) {
+                const totalItems = cartState.items.reduce((sum, i) => sum + (parseInt(i.quantity, 10) || 0), 0);
+                cartCountEl.textContent = totalItems.toString();
+            }
+
+            // Update savings display
+            updatePopupSavingsDisplay();
+
+            // HIDE Grand Total and show loading spinner (don't calculate locally)
+            const cartTotalEl = document.getElementById('cart-total-price');
+            if (cartTotalEl) {
+                cartTotalEl.classList.add('loading-total');
+                cartTotalEl.innerHTML = '<i class="fa fa-spinner fa-spin"></i> جاري التحديث...';
+            }
+
+            // Check if cart is now empty and show empty message
+            if (cartState.items.length === 0 && cartItemsList) {
+                cartItemsList.innerHTML = '<p class="cart-empty-msg">سلة المشتريات فارغة.</p>';
+                // Remove savings display when empty
+                const existingSavings = document.querySelector('.cart-popup-savings');
+                if (existingSavings) existingSavings.remove();
+                // Reset total to 0 when empty
+                if (cartTotalEl) {
+                    cartTotalEl.classList.remove('loading-total');
+                    const currencyIcon = '<img src="./assets/images/Saudi_Riyal_Symbol.png" alt="ريال" class="saudi-riyal-symbol riyal-inline-fix">';
+                    cartTotalEl.innerHTML = `0 ${currencyIcon}`;
+                }
+            }
+        }
+
+        // Function to update savings display in popup
+        function updatePopupSavingsDisplay() {
+            let totalSavings = 0;
+            cartState.items.forEach(item => {
+                const origPrice = parseFloat(item.originalPrice) || 0;
+                const effPrice = parseFloat(item.salePrice ?? item.price) || 0;
+                const qty = parseInt(item.quantity, 10) || 0;
+                if (origPrice > effPrice && effPrice > 0) {
+                    totalSavings += (origPrice - effPrice) * qty;
+                }
+            });
+
+            const existingSavings = document.querySelector('.cart-popup-savings');
+
+            if (totalSavings > 0) {
+                const currencyIcon = '<img src="./assets/images/Saudi_Riyal_Symbol.png" alt="ريال" class="saudi-riyal-symbol riyal-inline-fix">';
+                const savingsHtml = `<i class="fa fa-tag"></i> وفرت: ${formatPrice(totalSavings)} ${currencyIcon}`;
+
+                if (existingSavings) {
+                    existingSavings.innerHTML = savingsHtml;
+                } else {
+                    const savingsEl = document.createElement('div');
+                    savingsEl.className = 'cart-popup-savings';
+                    savingsEl.innerHTML = savingsHtml;
+                    if (cartItemsList && cartItemsList.parentNode) {
+                        cartItemsList.parentNode.insertBefore(savingsEl, cartItemsList.nextSibling);
+                    }
+                }
+            } else {
+                if (existingSavings) existingSavings.remove();
+            }
+        }
+
+        function debouncedCartUpdate(itemId, finalQuantity) {
+            // Clear existing timer for this item
+            if (cartDebounceTimers.has(itemId)) {
+                clearTimeout(cartDebounceTimers.get(itemId));
+            }
+
+            // Ensure loading state is showing
+            const cartTotalEl = document.getElementById('cart-total-price');
+            if (cartTotalEl && !cartTotalEl.classList.contains('loading-total')) {
+                cartTotalEl.classList.add('loading-total');
+                safeSetHTML(cartTotalEl, '<i class="fa fa-spinner fa-spin"></i> جاري التحديث...');
+            }
+
+            // Set new debounce timer
+            const timerId = setTimeout(() => {
+                cartDebounceTimers.delete(itemId);
+
+                // Send final quantity to server
+                updateCartItemQuantitySilent(itemId, finalQuantity)
+                    .then(() => {
+                        // Server responded - update total with actual server value
+                        if (cartTotalEl) {
+                            cartTotalEl.classList.remove('loading-total');
+                            const currencyIcon = '<img src="./assets/images/Saudi_Riyal_Symbol.png" alt="ريال" class="saudi-riyal-symbol riyal-inline-fix">';
+                            safeSetHTML(cartTotalEl, `${formatPrice(cartState.totals.total)} ${currencyIcon}`);
+                        }
+                    })
+                    .catch(error => {
+                        // Remove loading state on error
+                        if (cartTotalEl) {
+                            cartTotalEl.classList.remove('loading-total');
+                        }
+                        // On error, revert to server state
+                        showToast('تعذر تحديث الكمية. جاري التحديث...', 'error');
+                        refreshCartState(true); // Force refresh to rollback
+                    });
+            }, DEBOUNCE_DELAY_MS);
+
+            cartDebounceTimers.set(itemId, timerId);
         }
 
         // Handle increment/decrement/remove clicks via event delegation
@@ -3235,29 +3587,44 @@ document.addEventListener('auth:user-updated', () => {
             const decreaseBtn = target.closest('.decrease-btn');
             const removeBtn = target.closest('.remove-item-btn');
 
-            if (increaseBtn) {
-                const cartItem = increaseBtn.closest('.cart-item');
-                const itemId = cartItem.dataset.itemId;
-                if (itemId) {
-                    const current = cartState.items.find(item => item.id === itemId);
-                    const newQuantity = (current?.quantity || 0) + 1;
-                    updateCartItemQuantity(itemId, newQuantity).catch(error => {
-                    });
+            if (increaseBtn || decreaseBtn) {
+                const cartItem = (increaseBtn || decreaseBtn).closest('.cart-item');
+                const itemId = cartItem?.dataset.itemId;
+                if (!itemId) return;
+
+                const current = cartState.items.find(item => item.id === itemId);
+                if (!current) return;
+
+                // Get max stock from item or data attribute
+                const maxStock = parseInt(current.stock ?? cartItem?.dataset.stock ?? 999, 10);
+
+                // Check stock limit before increasing
+                if (increaseBtn && current.quantity >= maxStock) {
+                    showStockLimitModal(current.name, maxStock);
+                    return;
                 }
-            } else if (decreaseBtn) {
-                const cartItem = decreaseBtn.closest('.cart-item');
-                const itemId = cartItem.dataset.itemId;
-                if (itemId) {
-                    const current = cartState.items.find(item => item.id === itemId);
-                    const newQuantity = (current?.quantity || 0) - 1;
-                    updateCartItemQuantity(itemId, newQuantity).catch(error => {
-                    });
+
+                // 1. Calculate new quantity with stock limit
+                const delta = increaseBtn ? 1 : -1;
+                let newQuantity = Math.max(0, (current.quantity || 0) + delta);
+
+                // Cap at max stock
+                if (newQuantity > maxStock) {
+                    newQuantity = maxStock;
                 }
+
+                // 2. INSTANT UI Update (Optimistic)
+                updateCartItemUIInstantly(itemId, newQuantity);
+
+                // 3. Debounced Server Sync
+                debouncedCartUpdate(itemId, newQuantity);
+
             } else if (removeBtn) {
                 const cartItem = removeBtn.closest('.cart-item');
-                const itemId = cartItem.dataset.itemId;
+                const itemId = cartItem?.dataset.itemId;
                 if (itemId) {
                     removeCartItem(itemId).catch(error => {
+                        // Keep existing remove logic (no debounce needed)
                     });
                 }
             }
@@ -3647,17 +4014,150 @@ document.addEventListener('auth:user-updated', () => {
     5. Toast Notification
     =================================================================== */
     // Display temporary toast message near bottom of page
-    window.showToast = function(message, type = 'info') {
-        const toast = document.getElementById('add-to-cart-toast');
-        if (toast) {
-            toast.dataset.type = type;
-            toast.textContent = message;
-            toast.classList.add('show');
-            setTimeout(() => {
-                toast.classList.remove('show');
-                delete toast.dataset.type;
-            }, 3000);
+    window.showToast = function (message, type = 'info') {
+        if (typeof document === 'undefined') return;
+
+        let toast = document.getElementById('add-to-cart-toast');
+        if (!toast) {
+            toast = document.createElement('div');
+            toast.id = 'add-to-cart-toast';
+            toast.className = 'add-to-cart-toast';
+            document.body.appendChild(toast);
         }
+
+        const existingTimeoutId = toast.dataset.timeoutId ? Number(toast.dataset.timeoutId) : null;
+        if (existingTimeoutId) {
+            clearTimeout(existingTimeoutId);
+        }
+
+        if (type) {
+            toast.dataset.type = type;
+        } else {
+            delete toast.dataset.type;
+        }
+
+        toast.textContent = message;
+        toast.classList.add('show');
+
+        const timeoutId = window.setTimeout(() => {
+            toast.classList.remove('show');
+            delete toast.dataset.type;
+            delete toast.dataset.timeoutId;
+        }, 3000);
+
+        toast.dataset.timeoutId = String(timeoutId);
+    }
+
+    /* ===================================================================
+    5.1 Clipboard Copy Helper
+    =================================================================== */
+    window.copyContent = function (textElementId, buttonId) {
+        if (typeof document === 'undefined') return;
+
+        const textElement = document.getElementById(textElementId);
+        const button = document.getElementById(buttonId);
+
+        if (!textElement || !button) return;
+
+        const textToCopy = (textElement.textContent || textElement.innerText || '').trim();
+        if (!textToCopy) {
+            if (typeof window.showToast === 'function') {
+                window.showToast('لا يوجد نص لنسخه.', 'warning');
+            }
+            return;
+        }
+
+        const originalContent = button.innerHTML;
+        const originalAriaLabel = button.getAttribute('aria-label');
+
+        const clearExistingTimeout = () => {
+            if (button.dataset.copyTimeoutId) {
+                const existingId = Number(button.dataset.copyTimeoutId);
+                if (existingId) {
+                    clearTimeout(existingId);
+                }
+                delete button.dataset.copyTimeoutId;
+            }
+        };
+
+        const revertButton = () => {
+            button.innerHTML = originalContent;
+            if (originalAriaLabel !== null) {
+                button.setAttribute('aria-label', originalAriaLabel);
+            } else {
+                button.removeAttribute('aria-label');
+            }
+        };
+
+        const notify = (message, type) => {
+            if (typeof window.showToast === 'function') {
+                window.showToast(message, type);
+            } else if (typeof alert === 'function') {
+                alert(message);
+            }
+        };
+
+        const indicateSuccess = () => {
+            button.textContent = '✔️';
+            button.setAttribute('aria-label', 'تم النسخ');
+
+            clearExistingTimeout();
+            const timeoutId = window.setTimeout(() => {
+                revertButton();
+                delete button.dataset.copyTimeoutId;
+            }, 2000);
+            button.dataset.copyTimeoutId = String(timeoutId);
+
+            notify('تم النسخ إلى الحافظة بنجاح', 'success');
+        };
+
+        const handleError = (error) => {
+            console.error('فشل النسخ:', error);
+            clearExistingTimeout();
+            revertButton();
+            notify('تعذر النسخ، يرجى المحاولة يدوياً.', 'error');
+        };
+
+        const fallbackCopy = () => new Promise((resolve, reject) => {
+            try {
+                const textarea = document.createElement('textarea');
+                textarea.value = textToCopy;
+                textarea.setAttribute('readonly', '');
+                textarea.style.position = 'fixed';
+                textarea.style.top = '-9999px';
+
+                document.body.appendChild(textarea);
+                textarea.select();
+                textarea.setSelectionRange(0, textarea.value.length);
+
+                const success = document.execCommand('copy');
+                document.body.removeChild(textarea);
+
+                if (success) {
+                    resolve();
+                } else {
+                    reject(new Error('execCommand copy failed'));
+                }
+            } catch (fallbackError) {
+                reject(fallbackError);
+            }
+        });
+
+        const hasClipboardAPI = !!(navigator && navigator.clipboard && typeof navigator.clipboard.writeText === 'function');
+
+        const primaryPromise = hasClipboardAPI
+            ? navigator.clipboard.writeText(textToCopy)
+            : fallbackCopy();
+
+        primaryPromise
+            .then(indicateSuccess)
+            .catch(error => {
+                if (hasClipboardAPI) {
+                    fallbackCopy().then(indicateSuccess).catch(handleError);
+                } else {
+                    handleError(error);
+                }
+            });
     }
 
     /* ===================================================================
@@ -3679,7 +4179,7 @@ document.addEventListener('auth:user-updated', () => {
         try {
             // SECURITY: Use cached price instead of DOM price (prevent price manipulation)
             const securePrice = getSecureProductPrice(product.id, product.price);
-            
+
             const payload = {
                 id: product.id,
                 name: product.name,
@@ -3704,7 +4204,7 @@ document.addEventListener('auth:user-updated', () => {
     function initAddToCart() {
         const addToCartButtons = document.querySelectorAll('.add-to-cart-btn');
         addToCartButtons.forEach(button => {
-            button.addEventListener('click', function(e) {
+            button.addEventListener('click', function (e) {
                 e.preventDefault();
                 const productCard = this.closest('.product-card');
 
@@ -3737,7 +4237,7 @@ document.addEventListener('auth:user-updated', () => {
         // Update icon based on current theme
         updateThemeIcon(currentTheme);
 
-        themeToggle.addEventListener('click', function() {
+        themeToggle.addEventListener('click', function () {
             const theme = document.documentElement.getAttribute('data-theme');
             const newTheme = theme === 'dark' ? 'light' : 'dark';
 

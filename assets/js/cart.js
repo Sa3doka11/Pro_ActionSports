@@ -33,14 +33,14 @@
      */
     function sanitizeHtmlContent(html) {
         if (typeof html !== 'string') return '';
-        
+
         if (typeof window !== 'undefined' && typeof window.DOMPurify !== 'undefined' && typeof window.DOMPurify.sanitize === 'function') {
-            return window.DOMPurify.sanitize(html, { 
+            return window.DOMPurify.sanitize(html, {
                 ALLOWED_TAGS: ['div', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'span', 'br', 'strong', 'em', 'i', 'u', 'b', 'ul', 'ol', 'li', 'a', 'img', 'table', 'tbody', 'thead', 'tfoot', 'tr', 'td', 'th', 'caption', 'form', 'button', 'input', 'textarea', 'select', 'option', 'label', 'fieldset', 'legend', 'video', 'source', 'audio', 'picture', 'figure', 'figcaption', 'section', 'article', 'nav', 'footer', 'header'],
                 ALLOWED_ATTR: ['style', 'class', 'id', 'role', 'data-*', 'href', 'src', 'alt', 'title', 'type', 'name', 'value', 'checked', 'disabled', 'selected', 'action', 'method', 'enctype', 'controls', 'aria-*', 'target', 'rel', 'datetime', 'width', 'height', 'loading', 'poster', 'colspan', 'rowspan']
             });
         }
-        
+
         // If DOMPurify is not available, return empty string for security
         return '';
     }
@@ -71,7 +71,9 @@
         getMyOrders: () => window.API_CONFIG.getEndpoint('ORDERS_MY'),
         deliver: (id) => `${window.API_CONFIG.getEndpoint('ORDERS_LIST')}/${id}/deliver`,
         cancel: (id) => `${window.API_CONFIG.getEndpoint('ORDERS_LIST')}/${id}/cancel`,
-        payWithPayTabs: () => window.API_CONFIG.getEndpoint('ORDERS_PAY_PAYTABS')
+        payWithPayTabs: () => window.API_CONFIG.getEndpoint('ORDERS_PAY_PAYTABS'),
+        payWithTamara: () => window.API_CONFIG.getEndpoint('ORDERS_PAY_TAMARA'),
+        payWithTabby: () => window.API_CONFIG.getEndpoint('ORDERS_PAY_TABBY')
     };
 
     const PAYMENT_SETTINGS_ENDPOINT = window.API_CONFIG.getEndpoint('PAYMENT_SETTINGS');
@@ -105,6 +107,10 @@
         }
         return new Map();
     })();
+
+    // Debounce state for cart quantity updates
+    const cartDebounceTimers = new Map(); // itemId -> timeoutId
+    const DEBOUNCE_DELAY_MS = 500;
 
     async function fetchPaymentSettings(force = false) {
         if (!force && paymentSettingsCache) {
@@ -388,6 +394,19 @@
         return `${formatCartPrice(value)}`;
     }
 
+    /**
+     * Calculate item subtotal with sale price priority
+     * @param {Object} item - Cart item object
+     * @returns {number} - Calculated subtotal (price × quantity)
+     */
+    function calculateItemSubtotal(item) {
+        if (!item) return 0;
+        // Prioritize sale/discounted price over base price
+        const effectivePrice = parseFloat(item.salePrice ?? item.discountedPrice ?? item.price) || 0;
+        const quantity = parseInt(item.quantity, 10) || 0;
+        return effectivePrice * quantity;
+    }
+
     function showToast(message, type = 'info') {
         if (typeof window.showToast === 'function') {
             window.showToast(message, type);
@@ -662,6 +681,17 @@
 
         const shipping = 0;
 
+        // Calculate total savings from discounts
+        let totalSavings = 0;
+        state.items.forEach(item => {
+            const origPrice = parseFloat(item.originalPrice) || 0;
+            const effPrice = parseFloat(item.salePrice ?? item.price) || 0;
+            const qty = parseInt(item.quantity, 10) || 0;
+            if (origPrice > effPrice && effPrice > 0) {
+                totalSavings += (origPrice - effPrice) * qty;
+            }
+        });
+
         // احسب الـ total كـ: subtotal + shipping + installation
         const total = subtotal;
 
@@ -678,6 +708,36 @@
                 image = FALLBACK_IMAGE;
             }
 
+            // Check for discount
+            const originalPrice = parseFloat(item.originalPrice ?? item.price) || 0;
+            const effectivePrice = parseFloat(item.salePrice ?? item.discountedPrice ?? item.price) || 0;
+            const hasDiscount = originalPrice > effectivePrice && effectivePrice > 0;
+            const discountPercent = hasDiscount ? Math.round((1 - effectivePrice / originalPrice) * 100) : 0;
+            const subtotal = calculateItemSubtotal(item);
+
+            // Check for low stock
+            const stock = parseInt(item.stock ?? item.maxQuantity ?? 999, 10);
+            const isLowStock = stock > 0 && stock <= 5;
+
+            // Build price display HTML
+            let priceHtml = '';
+            if (hasDiscount) {
+                priceHtml = `
+                    <div class="cart-item-price-container">
+                        <span class="cart-item-price-original">${renderCurrencyWithIcon(originalPrice * item.quantity)}</span>
+                        <span class="cart-item-price-discounted">
+                            <span class="cart-item-discount-badge">-${discountPercent}%</span>
+                            ${renderCurrencyWithIcon(subtotal)}
+                        </span>
+                    </div>`;
+            } else {
+                priceHtml = `<div class="cart-item-price">${renderCurrencyWithIcon(subtotal)}</div>`;
+            }
+
+            // Low stock warning HTML
+            const stockWarningHtml = isLowStock ?
+                `<div class="cart-item-stock-warning"><i class="fa fa-exclamation-circle"></i> باقي ${stock} فقط!</div>` : '';
+
             return `
             <div class="cart-item-row" data-id="${sanitizeHtmlContent(item.id)}" data-product-id="${sanitizeHtmlContent(item.productId || '')}">
                 <div class="cart-item-image">
@@ -685,14 +745,15 @@
                 </div>
                 <div class="cart-item-details">
                     <h3>${sanitizeHtmlContent(item.name)}</h3>
-                    <div class="cart-item-price">${renderCurrencyWithIcon(item.price)}</div>
+                    ${priceHtml}
+                    ${stockWarningHtml}
                     <div class="cart-item-actions">
                         <div class="quantity-control">
                             <button class="quantity-btn" data-action="decrease" data-id="${sanitizeHtmlContent(item.id)}">
                                 <i class="fa fa-minus"></i>
                             </button>
                             <span>${item.quantity}</span>
-                            <button class="quantity-btn" data-action="increase" data-id="${sanitizeHtmlContent(item.id)}">
+                            <button class="quantity-btn" data-action="increase" data-id="${sanitizeHtmlContent(item.id)}"${item.quantity >= stock ? ' disabled' : ''}>
                                 <i class="fa fa-plus"></i>
                             </button>
                         </div>
@@ -716,8 +777,14 @@
                     <h2>ملخص الطلب</h2>
                     <div class="summary-row">
                         <span>المجموع الفرعي:</span>
-                        <span>${renderCurrencyWithIcon(subtotal)}</span>
+                        <span id="orderSubtotalValue">${renderCurrencyWithIcon(subtotal)}</span>
                     </div>
+                    ${totalSavings > 0 ? `
+                    <div class="summary-row savings-row" id="orderSavingsRow">
+                        <span><i class="fa fa-tag"></i> وفرت:</span>
+                        <span class="savings-value" id="orderSavingsValue">${renderCurrencyWithIcon(totalSavings)}</span>
+                    </div>
+                    ` : ''}
                     <div class="summary-row hidden" id="orderShippingRow">
                         <span id="orderShippingLabel">مصاريف الشحن:</span>
                         <span class="price" id="orderShippingValue"></span>
@@ -920,7 +987,7 @@
         const listContainer = document.getElementById('addresses-list-container');
         const noAddressesMsg = document.getElementById('no-addresses-message');
         const confirmBtn = document.getElementById('confirmOrderButton');
-        
+
         if (!listContainer || !noAddressesMsg) {
             // عناصر العنوان غير متاحة؛ خروج آمن دون تسجيل خطأ
             return;
@@ -939,11 +1006,11 @@
             if (!hydrated) {
                 // أخفِ قائمة العناوين الفعلية
                 listContainer.style.display = 'none';
-                
+
                 // أظهر رسالة "لا يوجد عناوين محفوظة"
                 noAddressesMsg.style.display = 'block';
                 noAddressesMsg.classList.remove('hidden');
-                
+
                 selectedCheckoutAddressId = null;
                 if (confirmBtn) confirmBtn.disabled = true;
                 resetSelectedShippingDetails();
@@ -955,7 +1022,7 @@
         // حالة 2: يوجد عناوين
         // أظهر قائمة العناوين
         listContainer.style.display = 'grid';
-        
+
         // أخفِ رسالة "لا يوجد عناوين"
         noAddressesMsg.style.display = 'none';
         noAddressesMsg.classList.add('hidden');
@@ -1247,6 +1314,240 @@
         showToast('تم إضافة العنوان بنجاح!', 'success');
     }
 
+    function updateCartItemUIInstantlyOnPage(itemId, newQuantity) {
+        // Find the cart item row
+        const cartRow = document.querySelector(`.cart-item-row[data-id="${itemId}"]`);
+        if (!cartRow) return;
+
+        // Get the item's unit price
+        const state = getCartStateSafe();
+        const itemIndex = state.items.findIndex(item => item.id === itemId);
+        if (itemIndex === -1) return;
+
+        const item = state.items[itemIndex];
+        const unitPrice = parseFloat(item.price) || 0;
+
+        if (newQuantity <= 0) {
+            // Remove from local state
+            state.items.splice(itemIndex, 1);
+            // Remove the row from DOM
+            cartRow.remove();
+        } else {
+            // Update quantity in local state
+            state.items[itemIndex].quantity = newQuantity;
+
+            // Update the quantity display instantly
+            const quantitySpan = cartRow.querySelector('.quantity-control span');
+            if (quantitySpan) {
+                quantitySpan.textContent = newQuantity;
+            }
+
+            // Calculate and update item subtotal INSTANTLY
+            // Verify unitPrice is valid
+            const newSubtotal = unitPrice * newQuantity;
+            const priceDisplay = cartRow.querySelector('.cart-item-price');
+            // Force update text content to ensure it changes
+            if (priceDisplay && Number.isFinite(newSubtotal)) {
+                safeSetHTML(priceDisplay, renderCurrencyWithIcon(newSubtotal));
+            }
+
+            // Update increase button disabled state based on stock
+            const maxStock = parseInt(item.stock ?? item.maxQuantity ?? 999, 10);
+            const increaseBtn = cartRow.querySelector('.quantity-btn[data-action="increase"]');
+            if (increaseBtn) {
+                increaseBtn.disabled = newQuantity >= maxStock;
+            }
+        }
+
+        // Update products count in header
+        const productsHeader = document.querySelector('.cart-items-section h2');
+        if (productsHeader) {
+            safeSetText(productsHeader, `المنتجات (${state.items.length})`);
+        }
+
+        // Calculate and update SUBTOTAL instantly (المجموع الفرعي)
+        let newSubtotalSum = 0;
+        let totalSavings = 0;
+        state.items.forEach(cartItem => {
+            const price = parseFloat(cartItem.salePrice ?? cartItem.discountedPrice ?? cartItem.price) || 0;
+            const origPrice = parseFloat(cartItem.originalPrice) || 0;
+            const qty = parseInt(cartItem.quantity, 10) || 0;
+            newSubtotalSum += price * qty;
+
+            // Calculate savings for this item
+            if (origPrice > price && price > 0) {
+                totalSavings += (origPrice - price) * qty;
+            }
+        });
+        const orderSubtotalEl = document.getElementById('orderSubtotalValue');
+        if (orderSubtotalEl) {
+            safeSetHTML(orderSubtotalEl, renderCurrencyWithIcon(newSubtotalSum));
+        }
+
+        // Update savings section
+        const savingsRow = document.getElementById('orderSavingsRow');
+        const savingsValue = document.getElementById('orderSavingsValue');
+        if (savingsValue && savingsRow) {
+            if (totalSavings > 0) {
+                safeSetHTML(savingsValue, renderCurrencyWithIcon(totalSavings));
+                savingsRow.style.display = '';
+            } else {
+                savingsRow.style.display = 'none';
+            }
+        }
+
+        // HIDE Grand Total and show loading spinner (shipping/installation need server)
+        const orderTotalEl = document.getElementById('orderTotalValue');
+        if (orderTotalEl) {
+            orderTotalEl.classList.add('loading-total');
+            safeSetHTML(orderTotalEl, '<i class="fa fa-spinner fa-spin"></i> جاري التحديث...');
+        }
+
+        // Check if cart is now empty - target only items section, preserve checkout form
+        const itemsSection = document.querySelector('.cart-items-section');
+        if (state.items.length === 0 && itemsSection) {
+            safeSetHTML(itemsSection, `
+                <h2>المنتجات (0)</h2>
+                <div class="empty-cart">
+                    <i class="fa fa-shopping-cart"></i>
+                    <h3>سلة المشتريات فارغة</h3>
+                    <p>لم تقم بإضافة أي منتجات بعد</p>
+                    <div class="main-button">
+                        <a href="./products.html">تصفح المنتجات</a>
+                    </div>
+                </div>
+            `);
+            // Reset total to 0 when empty
+            if (orderTotalEl) {
+                orderTotalEl.classList.remove('loading-total');
+                safeSetHTML(orderTotalEl, renderCurrencyWithIcon(0));
+            }
+        }
+    }
+
+    function handleRemoveItem(event) {
+        event.preventDefault(); // Prevent any default button behavior
+        const button = event.currentTarget;
+        const itemId = button.dataset.id;
+        if (!itemId) return;
+
+        // 1. Optimistic UI Removal
+        // Find row and remove it
+        const cartRow = document.querySelector(`.cart-item-row[data-id="${itemId}"]`);
+        if (cartRow) {
+            cartRow.style.opacity = '0.5'; // Visual feedback
+            cartRow.style.pointerEvents = 'none';
+        }
+
+        // 2. Call API Silently (suppressEvent: true to prevent full re-render)
+        ensureCartStateLoaded()
+            .then(() => removeCartItem(itemId, { suppressEvent: true }))
+            .then(() => {
+                // Success: Remove row fully and update local totals if needed
+                if (cartRow) cartRow.remove();
+
+                // Update local state manually since we suppressed the event
+                const state = getCartStateSafe();
+                const itemIndex = state.items.findIndex(i => i.id === itemId);
+                if (itemIndex > -1) {
+                    state.items.splice(itemIndex, 1);
+                }
+
+                // Recalculate and update summary totals
+                updateSummaryTotals();
+                updateCartCount();
+
+                // Handle empty state if needed - target only items section, preserve checkout
+                if (state.items.length === 0) {
+                    const itemsSection = document.querySelector('.cart-items-section');
+                    if (itemsSection) {
+                        safeSetHTML(itemsSection, `
+                            <h2>المنتجات (0)</h2>
+                            <div class="empty-cart">
+                                <i class="fa fa-shopping-cart"></i>
+                                <h3>سلة المشتريات فارغة</h3>
+                                <p>لم تقم بإضافة أي منتجات بعد</p>
+                                <div class="main-button">
+                                    <a href="./products.html">تصفح المنتجات</a>
+                                </div>
+                            </div>
+                        `);
+                    }
+                }
+            })
+            .catch(error => {
+                // Revert UI on error
+                if (cartRow) {
+                    cartRow.style.opacity = '1';
+                    cartRow.style.pointerEvents = 'auto';
+                }
+                showToast(error.message || 'تعذر حذف المنتج من السلة.', 'error');
+            });
+    }
+
+    function debouncedCartPageUpdate(itemId, finalQuantity) {
+        // Clear existing timer for this item
+        if (cartDebounceTimers.has(itemId)) {
+            clearTimeout(cartDebounceTimers.get(itemId));
+        }
+
+        // Ensure loading state is showing
+        const orderTotalEl = document.getElementById('orderTotalValue');
+        if (orderTotalEl && !orderTotalEl.classList.contains('loading-total')) {
+            orderTotalEl.classList.add('loading-total');
+            safeSetHTML(orderTotalEl, '<i class="fa fa-spinner fa-spin"></i> جاري التحديث...');
+        }
+
+        // Set new debounce timer
+        const timerId = setTimeout(() => {
+            cartDebounceTimers.delete(itemId);
+
+            // Send final quantity to server
+            updateCartItemQuantitySilent(itemId, finalQuantity)
+                .then(() => {
+                    // Server responded - remove loading state and update with server values
+                    if (orderTotalEl) {
+                        orderTotalEl.classList.remove('loading-total');
+                    }
+                    // Update summary totals with actual server values
+                    updateSummaryTotals();
+                })
+                .catch(error => {
+                    // Remove loading state on error
+                    if (orderTotalEl) {
+                        orderTotalEl.classList.remove('loading-total');
+                    }
+                    // On error, revert to server state
+                    showToast('تعذر تحديث الكمية. جاري التحديث...', 'error');
+                    ensureCartStateLoaded(true).then(() => {
+                        renderCart(); // Force full re-render to rollback
+                    });
+                });
+        }, DEBOUNCE_DELAY_MS);
+
+        cartDebounceTimers.set(itemId, timerId);
+    }
+
+    async function updateCartItemQuantitySilent(itemId, quantity) {
+        if (!itemId) return;
+        if (quantity <= 0) {
+            // For removal, use the script.js function if available
+            if (typeof window.removeCartItem === 'function') {
+                return window.removeCartItem(itemId);
+            }
+            return;
+        }
+
+        // Use the global updateCartItemQuantity from script.js
+        if (typeof window.updateCartItemQuantity === 'function') {
+            try {
+                await window.updateCartItemQuantity(itemId, quantity);
+            } catch (error) {
+                throw error;
+            }
+        }
+    }
+
     function handleQuantityChange(event) {
         const button = event.currentTarget;
         const action = button.dataset.action;
@@ -1254,29 +1555,171 @@
 
         if (!action || !itemId) return;
 
-        ensureCartStateLoaded()
-            .then(() => {
-                const current = getCartStateSafe().items.find(item => item.id === itemId);
-                if (!current) return;
+        const state = getCartStateSafe();
+        const current = state.items.find(item => item.id === itemId);
+        if (!current) return;
 
-                const nextQuantity = action === 'increase' ? current.quantity + 1 : current.quantity - 1;
-                return updateCartItemQuantity(itemId, nextQuantity);
-            })
-            .catch(error => {
-                showToast(error.message || 'تعذر تحديث الكمية.', 'error');
-            });
+        // Get max stock (default to 999 if not available)
+        const maxStock = parseInt(current.stock ?? current.maxQuantity ?? 999, 10);
+
+        // Calculate new quantity with min/max limits
+        const delta = action === 'increase' ? 1 : -1;
+        let newQuantity = current.quantity + delta;
+
+        // Enforce limits
+        if (newQuantity < 0) newQuantity = 0;
+        if (newQuantity > maxStock) {
+            // Show warning and cap at max
+            showToast(`الحد الأقصى المتاح: ${maxStock} قطعة`, 'warning');
+            newQuantity = maxStock;
+            // Don't update if already at max
+            if (current.quantity >= maxStock) return;
+        }
+
+        // 2. INSTANT UI Update (Optimistic)
+        updateCartItemUIInstantlyOnPage(itemId, newQuantity);
+
+        // 3. Debounced Server Sync
+        debouncedCartPageUpdate(itemId, newQuantity);
     }
 
     function handleRemoveItem(event) {
+        event.preventDefault();
         const button = event.currentTarget;
         const itemId = button.dataset.id;
         if (!itemId) return;
 
-        ensureCartStateLoaded()
-            .then(() => removeCartItem(itemId))
-            .catch(error => {
-                showToast(error.message || 'تعذر حذف المنتج من السلة.', 'error');
-            });
+        const state = getCartStateSafe();
+        const item = state.items.find(i => i.id === itemId);
+        const itemName = item?.name || 'هذا المنتج';
+
+        // Show confirmation dialog
+        showDeleteConfirmation(itemName, () => {
+            // User confirmed - proceed with deletion
+            const cartRow = document.querySelector(`.cart-item-row[data-id="${itemId}"]`);
+            if (cartRow) {
+                cartRow.style.opacity = '0.5';
+                cartRow.style.pointerEvents = 'none';
+            }
+
+            ensureCartStateLoaded()
+                .then(() => removeCartItem(itemId, { suppressEvent: true }))
+                .then(() => {
+                    if (cartRow) cartRow.remove();
+
+                    // Update local state
+                    const updatedState = getCartStateSafe();
+                    const itemIndex = updatedState.items.findIndex(i => i.id === itemId);
+                    if (itemIndex > -1) {
+                        updatedState.items.splice(itemIndex, 1);
+                    }
+
+                    updateSummaryTotals();
+                    updateCartCount();
+
+                    // Update products header
+                    const productsHeader = document.querySelector('.cart-items-section h2');
+                    if (productsHeader) {
+                        safeSetText(productsHeader, `المنتجات (${updatedState.items.length})`);
+                    }
+
+                    // Update savings display after removal
+                    let totalSavings = 0;
+                    updatedState.items.forEach(cartItem => {
+                        const price = parseFloat(cartItem.salePrice ?? cartItem.discountedPrice ?? cartItem.price) || 0;
+                        const origPrice = parseFloat(cartItem.originalPrice) || 0;
+                        const qty = parseInt(cartItem.quantity, 10) || 0;
+                        if (origPrice > price && price > 0) {
+                            totalSavings += (origPrice - price) * qty;
+                        }
+                    });
+                    const savingsRow = document.getElementById('orderSavingsRow');
+                    const savingsValue = document.getElementById('orderSavingsValue');
+                    if (savingsValue && savingsRow) {
+                        if (totalSavings > 0) {
+                            safeSetHTML(savingsValue, renderCurrencyWithIcon(totalSavings));
+                            savingsRow.style.display = '';
+                        } else {
+                            savingsRow.style.display = 'none';
+                        }
+                    }
+
+                    // Handle empty state
+                    if (updatedState.items.length === 0) {
+                        const itemsSection = document.querySelector('.cart-items-section');
+                        if (itemsSection) {
+                            safeSetHTML(itemsSection, `
+                                <h2>المنتجات (0)</h2>
+                                <div class="empty-cart">
+                                    <i class="fa fa-shopping-cart"></i>
+                                    <h3>سلة المشتريات فارغة</h3>
+                                    <p>لم تقم بإضافة أي منتجات بعد</p>
+                                    <div class="main-button">
+                                        <a href="./products.html">تصفح المنتجات</a>
+                                    </div>
+                                </div>
+                            `);
+                        }
+                    }
+
+                    showToast('تم حذف المنتج من السلة', 'success');
+                })
+                .catch(error => {
+                    if (cartRow) {
+                        cartRow.style.opacity = '1';
+                        cartRow.style.pointerEvents = 'auto';
+                    }
+                    showToast(error.message || 'تعذر حذف المنتج من السلة.', 'error');
+                });
+        });
+    }
+
+    /**
+     * Show delete confirmation modal
+     */
+    function showDeleteConfirmation(itemName, onConfirm) {
+        // Create modal overlay
+        const modal = document.createElement('div');
+        modal.className = 'delete-confirm-overlay';
+        modal.innerHTML = `
+            <div class="delete-confirm-modal">
+                <div class="delete-confirm-icon">
+                    <i class="fa fa-exclamation-triangle"></i>
+                </div>
+                <h3>تأكيد الحذف</h3>
+                <p>هل تريد حذف "${sanitizeHtmlContent(itemName)}" من السلة؟</p>
+                <div class="delete-confirm-actions">
+                    <button class="btn-cancel">إلغاء</button>
+                    <button class="btn-confirm">نعم، احذف</button>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(modal);
+
+        // Animate in
+        requestAnimationFrame(() => modal.classList.add('visible'));
+
+        // Handle cancel
+        modal.querySelector('.btn-cancel').addEventListener('click', () => {
+            modal.classList.remove('visible');
+            setTimeout(() => modal.remove(), 200);
+        });
+
+        // Handle confirm
+        modal.querySelector('.btn-confirm').addEventListener('click', () => {
+            modal.classList.remove('visible');
+            setTimeout(() => modal.remove(), 200);
+            onConfirm();
+        });
+
+        // Close on overlay click
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.classList.remove('visible');
+                setTimeout(() => modal.remove(), 200);
+            }
+        });
     }
 
     function handleCheckoutPaymentChange() {
@@ -1389,7 +1832,7 @@
             // 2. يوجد منتجات لها رسوم تركيب
             // 3. التركيب غير مدعومة في المدينة المختارة
             const shouldShowAlert = Boolean(selectedAddress) && hasInstallationItems && !installationSupported;
-            
+
             if (shouldShowAlert) {
                 installationAlert.classList.remove('hidden');
                 installationAlert.style.display = 'block';
@@ -1417,7 +1860,7 @@
         }
 
         const declaredTotal = Number(state.totals?.total);
-        
+
         // احسب الـ total كـ: subtotal + shipping + installation
         // لا تستخدم declaredTotal من الـ backend لأنه قد لا يشمل الشحن والتركيب الجديدة
         let total = subtotal + (Number.isFinite(shipping) && shipping > 0 ? shipping : 0) + installation;
@@ -1578,12 +2021,14 @@
                 throw new Error('يرجى اختيار مقدم خدمة التقسيط.');
             }
 
-            const installmentRedirect = resolveInstallmentRedirect(provider, payload, cartId);
-            if (!installmentRedirect) {
-                throw new Error('لا يوجد مسار متاح لمقدم خدمة التقسيط المختار.');
+            // استدعاء نقطة النهاية المناسبة بناءً على مقدم الخدمة
+            if (provider === 'tamara') {
+                return initiateTamaraPayment({ payload, cartId });
+            } else if (provider === 'tabby') {
+                return initiateTabbyPayment({ payload, cartId });
+            } else {
+                throw new Error('مقدم خدمة التقسيط غير مدعوم.');
             }
-
-            return { redirectUrl: installmentRedirect };
         }
 
         const orderResponse = await postOrderRequest(payload);
@@ -1639,7 +2084,7 @@
 
     async function initiatePayTabsPayment({ payload, cartId }) {
         // لا حاجة للتوكن اليدوي - postJson يتولى كل شيء تلقائياً
-        
+
         const normalizedCartItems = Array.isArray(payload.cartItems) ? payload.cartItems.map(item => {
             const productSource = item?.product || item?.productId || item?.rawProduct || {};
             const productIdValue = typeof item?.productId === 'object'
@@ -1701,7 +2146,7 @@
         if (payload.notes) {
             payTabsPayload.notes = payload.notes;
         }
-        
+
         // ✅ استخدم postJson - تتعامل مع التوكن تلقائياً مع credentials: 'include'
         const result = await postJson(ORDER_ENDPOINTS.payWithPayTabs(), payTabsPayload);
 
@@ -1715,6 +2160,176 @@
 
         if (!redirectUrl) {
             const error = new Error('لم يتم استلام رابط الدفع من بوابة PayTabs.');
+            error.status = 400;
+            error.details = result;
+            throw error;
+        }
+        return {
+            redirectUrl,
+            message: result?.message || 'جاري تحويلك إلى بوابة الدفع...'
+        };
+    }
+
+    async function initiateTamaraPayment({ payload, cartId }) {
+        const normalizedCartItems = Array.isArray(payload.cartItems) ? payload.cartItems.map(item => {
+            const productSource = item?.product || item?.productId || item?.rawProduct || {};
+            const productIdValue = typeof item?.productId === 'object'
+                ? (item.productId._id || item.productId.id || item.productId.value)
+                : (item.productId || item.id);
+
+            const resolvedPrice = Number(item?.price ?? productSource?.price ?? productSource?.unitPrice ?? 0);
+            const resolvedQuantity = Number(item?.quantity ?? item?.qty ?? 1) || 1;
+
+            return {
+                productId: productIdValue,
+                quantity: resolvedQuantity,
+                price: resolvedPrice
+            };
+        }).filter(item => item.productId) : [];
+
+        const rawShippingAddress = payload.shippingAddress || {};
+        const shippingDetailsValue = rawShippingAddress.details
+            || rawShippingAddress.address
+            || rawShippingAddress.addressLine1
+            || rawShippingAddress.line1
+            || '';
+
+        const minimalShippingAddress = {
+            details: shippingDetailsValue,
+            phone: rawShippingAddress.phone || undefined,
+            city: rawShippingAddress.city || rawShippingAddress.regionId || '',
+            postalCode: rawShippingAddress.postalCode || rawShippingAddress.zip || ''
+        };
+
+        if (rawShippingAddress.addressId) {
+            minimalShippingAddress.addressId = rawShippingAddress.addressId;
+        }
+        if (rawShippingAddress.regionId) {
+            minimalShippingAddress.regionId = rawShippingAddress.regionId;
+        }
+
+        Object.keys(minimalShippingAddress).forEach((key) => {
+            const value = minimalShippingAddress[key];
+            if (value === undefined || value === null || value === '') {
+                delete minimalShippingAddress[key];
+            }
+        });
+
+        const tamaraPayload = {
+            cartId,
+            paymentMethod: 'installment',
+            totalOrderPrice: payload.totalOrderPrice,
+            shippingPrice: payload.shippingPrice,
+            taxPrice: payload.taxPrice,
+            cartItems: normalizedCartItems,
+            shippingAddress: minimalShippingAddress
+        };
+
+        if (payload.userId) {
+            tamaraPayload.userId = payload.userId;
+        }
+
+        if (payload.notes) {
+            tamaraPayload.notes = payload.notes;
+        }
+
+        const result = await postJson(ORDER_ENDPOINTS.payWithTamara(), tamaraPayload);
+
+        const redirectUrl =
+            result?.data?.redirectUrl ||
+            result?.data?.redirect_url ||
+            result?.redirectUrl ||
+            result?.redirect_url ||
+            result?.data?.paymentUrl ||
+            result?.paymentUrl;
+
+        if (!redirectUrl) {
+            const error = new Error('لم يتم استلام رابط الدفع من بوابة تمارا.');
+            error.status = 400;
+            error.details = result;
+            throw error;
+        }
+        return {
+            redirectUrl,
+            message: result?.message || 'جاري تحويلك إلى بوابة الدفع...'
+        };
+    }
+
+    async function initiateTabbyPayment({ payload, cartId }) {
+        const normalizedCartItems = Array.isArray(payload.cartItems) ? payload.cartItems.map(item => {
+            const productSource = item?.product || item?.productId || item?.rawProduct || {};
+            const productIdValue = typeof item?.productId === 'object'
+                ? (item.productId._id || item.productId.id || item.productId.value)
+                : (item.productId || item.id);
+
+            const resolvedPrice = Number(item?.price ?? productSource?.price ?? productSource?.unitPrice ?? 0);
+            const resolvedQuantity = Number(item?.quantity ?? item?.qty ?? 1) || 1;
+
+            return {
+                productId: productIdValue,
+                quantity: resolvedQuantity,
+                price: resolvedPrice
+            };
+        }).filter(item => item.productId) : [];
+
+        const rawShippingAddress = payload.shippingAddress || {};
+        const shippingDetailsValue = rawShippingAddress.details
+            || rawShippingAddress.address
+            || rawShippingAddress.addressLine1
+            || rawShippingAddress.line1
+            || '';
+
+        const minimalShippingAddress = {
+            details: shippingDetailsValue,
+            phone: rawShippingAddress.phone || undefined,
+            city: rawShippingAddress.city || rawShippingAddress.regionId || '',
+            postalCode: rawShippingAddress.postalCode || rawShippingAddress.zip || ''
+        };
+
+        if (rawShippingAddress.addressId) {
+            minimalShippingAddress.addressId = rawShippingAddress.addressId;
+        }
+        if (rawShippingAddress.regionId) {
+            minimalShippingAddress.regionId = rawShippingAddress.regionId;
+        }
+
+        Object.keys(minimalShippingAddress).forEach((key) => {
+            const value = minimalShippingAddress[key];
+            if (value === undefined || value === null || value === '') {
+                delete minimalShippingAddress[key];
+            }
+        });
+
+        const tabbyPayload = {
+            cartId,
+            paymentMethod: 'installment',
+            totalOrderPrice: payload.totalOrderPrice,
+            shippingPrice: payload.shippingPrice,
+            taxPrice: payload.taxPrice,
+            cartItems: normalizedCartItems,
+            shippingAddress: minimalShippingAddress
+        };
+
+        if (payload.userId) {
+            tabbyPayload.userId = payload.userId;
+        }
+
+        if (payload.notes) {
+            tabbyPayload.notes = payload.notes;
+        }
+
+        const result = await postJson(ORDER_ENDPOINTS.payWithTabby(), tabbyPayload);
+
+        const redirectUrl =
+            result?.data?.redirectUrl ||
+            result?.data?.redirect_url ||
+            result?.redirectUrl ||
+            result?.redirect_url ||
+            result?.data?.paymentUrl ||
+            result?.paymentUrl;
+
+        if (!redirectUrl) {
+            const error = new Error('لم يتم استلام رابط الدفع من بوابة تابي.');
             error.status = 400;
             error.details = result;
             throw error;
@@ -1791,7 +2406,7 @@
         if (!ensureAuthenticated(event)) {
             return;
         }
-        
+
         // لا حاجة للتوكن اليدوي - postJson يتولى كل شيء تلقائياً
         await ensureCartStateLoaded(true);
 
@@ -1893,7 +2508,7 @@
         if (typeof ensureAuthUserLoaded === 'function') {
             await ensureAuthUserLoaded(false);
         }
-        
+
         ensureCartStateLoaded(true)
             .then(() => {
                 const cartId = getCartIdSafe();
@@ -1911,6 +2526,8 @@
 
     // Listen for cart updates
     document.addEventListener('cart:updated', () => {
+        // Reset address loading flag so addresses reload properly after cart changes
+        checkoutAddressesLoaded = false;
         renderCart();
         updateCartCount();
     });
@@ -1932,7 +2549,7 @@
     // -------------------------------------------------
     // إصلاح مشكلة إظهار خيارات التقسيط (Installment Options)
     // -------------------------------------------------
-    
+
     // مراقب لجميع تغييرات طريقة الدفع
     function setupInstallmentToggle() {
         const paymentMethods = document.querySelectorAll('select[name="paymentMethod"]');
@@ -1940,7 +2557,7 @@
 
         if (paymentMethods.length && installmentOptionsContainer) {
             paymentMethods.forEach(select => {
-                select.addEventListener('change', function() {
+                select.addEventListener('change', function () {
                     toggleInstallmentOptions();
                 });
             });
@@ -1953,7 +2570,7 @@
 
         if (paymentMethodSelect && installmentOptionsContainer) {
             const selectedMethod = paymentMethodSelect.value;
-            
+
             // تحقق: هل القيمة المختارة هي 'installment'؟
             if (selectedMethod === 'installment' || selectedMethod === 'tabby' || selectedMethod === 'tamara') {
                 // إذا كان تقسيط، أظهر الحاوية
@@ -1968,7 +2585,7 @@
     }
 
     // تشغيل التبديل الأولي عند تحميل الصفحة
-    setTimeout(function() {
+    setTimeout(function () {
         setupInstallmentToggle();
         toggleInstallmentOptions();
     }, 100);
