@@ -1083,8 +1083,11 @@ footer p a:hover {
   font-size: 20px;
   color: #232d39;
   font-weight: 700;
-  margin-top: 10px;
   margin-bottom: 20px;
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  flex-wrap: wrap;
 }
 
 .product-card .product-price .old-price {
@@ -1159,12 +1162,13 @@ footer p a:hover {
 .cart-item-price-container .saudi-riyal-symbol,
 .cart-item-price-current .saudi-riyal-symbol,
 .cart-item-price-original .saudi-riyal-symbol {
-  width: 16px;
-  height: 16px;
-  vertical-align: middle;
-  margin-right: 3px;
-  margin-left: 3px;
+  width: auto;
+  height: 1em;
+  vertical-align: baseline;
   display: inline-block;
+  flex-shrink: 0;
+  margin-inline-start: 4px;
+  margin-inline-end: 4px;
 }
 
 /* ===================================================================

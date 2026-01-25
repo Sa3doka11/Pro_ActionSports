@@ -1236,6 +1236,10 @@
       color: #232d39;
       font-weight: 700;
       margin: 0 0 15px 0;
+      display: flex;
+      align-items: baseline;
+      gap: 4px;
+      flex-wrap: wrap;
     }
 
     .product-card .product-price .old-price {
