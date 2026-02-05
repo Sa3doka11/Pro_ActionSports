@@ -1,0 +1,290 @@
+/* ===================================================================
+POPUP FORMS - style-popup.css
+نماذج تسجيل الدخول والتسجيل (في كل صفحة)
+=================================================================== */
+
+.popup {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.popup.is-visible {
+    display: flex;
+}
+
+.popup-content {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(250, 250, 250, 0.95));
+    backdrop-filter: blur(10px);
+    padding: 30px;
+    border-radius: 15px;
+    width: 90%;
+    max-width: 400px;
+    min-width: 280px;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    animation: zoomIn 0.5s ease-out;
+    transform-origin: center;
+    position: relative;
+}
+
+@keyframes zoomIn {
+    from {
+        transform: scale(1.5);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.close-btn {
+    position: absolute;
+    bottom: 80%;
+    right: 92%;
+    font-size: 24px;
+    cursor: pointer;
+    color: #ff4d4d;
+    transition: color 0.3s;
+    background: none;
+    border: none;
+}
+
+.close-btn:hover {
+    color: #cc0000;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+    position: relative;
+}
+
+.input-group {
+    position: relative;
+    margin: 0;
+}
+
+input {
+    padding: 10px;
+    border: 2px solid #ccc;
+    border-radius: 5px;
+    font-family: "Cairo", sans-serif;
+    font-size: 15px;
+    background-color: rgba(255, 255, 255, 0.9);
+    width: 90%;
+    box-sizing: border-box;
+    transition: all 0.3s ease;
+    color: #333;
+    cursor: text;
+    user-select: text;
+    -webkit-user-select: text;
+    pointer-events: auto;
+    z-index: 10;
+    position: relative;
+}
+
+.resend-otp-container {
+    margin: 15px 0;
+    text-align: center;
+}
+
+.resend-otp-btn {
+    background: none;
+    border: none;
+    color: var(--primary-color);
+    cursor: pointer;
+    font-size: 14px;
+    padding: 5px 10px;
+    transition: color 0.3s;
+    text-decoration: underline;
+}
+
+.resend-otp-btn:hover {
+    color: var(--primary-color-hover);
+    text-decoration: none;
+}
+
+.resend-otp-btn:disabled {
+    color: #999;
+    cursor: not-allowed;
+    text-decoration: none;
+}
+
+.resend-timer {
+    display: block;
+    color: #666;
+    font-size: 13px;
+    margin-top: 5px;
+}
+
+input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 5px rgba(255, 77, 77, 0.3);
+}
+
+input:hover {
+    border-color: #ff4d4d;
+}
+
+.input-group label {
+    position: absolute;
+    top: 50%;
+    right: 10%;
+    transform: translateY(-50%);
+    font-size: 16px;
+    color: #666;
+    pointer-events: none;
+    transition: all 0.3s ease;
+}
+
+.input-group input:focus+label,
+.input-group input:valid+label,
+.input-group input:hover+label {
+    top: -15px;
+    right: 10px;
+    font-size: 12px;
+    color: #ff4d4d;
+}
+
+button[type="submit"] {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 12px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    font-family: "Cairo", sans-serif;
+    font-weight: 700;
+}
+
+button[type="submit"]:hover {
+    background-color: var(--primary-color-hover);
+}
+
+.popup-content p {
+    text-align: center;
+    margin-top: 20px;
+}
+
+.form-message {
+    margin-top: 12px;
+    font-size: 0.9rem;
+    line-height: 1.4;
+    text-align: center;
+    border-radius: 6px;
+    padding: 10px 14px;
+    display: none;
+}
+
+.form-message[data-status="success"] {
+    display: block;
+    background: rgba(46, 204, 113, 0.12);
+    color: #1e7a39;
+    border: 1px solid rgba(46, 204, 113, 0.4);
+}
+
+.form-message[data-status="error"] {
+    display: block;
+    background: rgba(231, 76, 60, 0.12);
+    color: #a1261c;
+    border: 1px solid rgba(231, 76, 60, 0.4);
+}
+
+[data-theme="dark"] .popup-content {
+    background: linear-gradient(135deg, rgba(30, 30, 35, 0.98), rgba(25, 25, 30, 0.98));
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+}
+
+[data-theme="dark"] .popup-content p {
+    color: #e0e0e0;
+}
+
+[data-theme="dark"] .form-message[data-status="success"] {
+    background: rgba(46, 204, 113, 0.1);
+    color: #2ecc71;
+    border-color: rgba(46, 204, 113, 0.35);
+}
+
+[data-theme="dark"] .form-message[data-status="error"] {
+    background: rgba(231, 76, 60, 0.1);
+    color: #ff7365;
+    border-color: rgba(231, 76, 60, 0.35);
+}
+
+[data-theme="dark"] input {
+    background-color: rgba(50, 50, 50, 0.9);
+    color: #fff;
+    border-color: #555;
+}
+
+[data-theme="dark"] input:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 8px rgba(255, 77, 77, 0.4);
+}
+
+[data-theme="dark"] input:hover {
+    border-color: #ff6b6b;
+}
+
+[data-theme="dark"] input::placeholder {
+    color: #999;
+}
+
+#otpCode {
+    font-weight: 600;
+    letter-spacing: 3px;
+    text-align: center;
+    font-size: 18px;
+    padding: 15px;
+}
+
+#otpCode::placeholder {
+    letter-spacing: normal;
+    font-size: 14px;
+}
+
+.signup-link {
+    color: var(--primary-color);
+    text-decoration: none;
+    cursor: pointer;
+    margin-top: 10px;
+}
+
+.signup-link:hover {
+    text-decoration: underline;
+}
+
+.auth-helper {
+    margin-top: 15px;
+    font-size: 0.95rem;
+}
+
+.password-reset-link {
+    color: var(--primary-color);
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.password-reset-link:hover {
+    text-decoration: underline;
+}
+
+.otp-instructions {
+    margin-bottom: 15px;
+    font-size: 0.95rem;
+    color: #555;
+}
+

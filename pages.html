@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="Action Sports - صفحات المعلومات">
+    <meta name="author" content="Saftawy">
+
+    <link rel="apple-touch-icon" sizes="57x57" href="./assets/images/Logo.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="./assets/images/Logo.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="./assets/images/Logo.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="./assets/images/Logo.png">
+
+    <title>Action Sports</title> <!-- سيتم تغييره بواسطة JS -->
+
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- CSS Files -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="assets/css/style-rtl.css">
+    <link rel="stylesheet" href="assets/css/popup.css">
+    <link rel="stylesheet" href="assets/css/static-pages.css">
+</head>
+
+<body>
+
+    <!-- ***** Preloader ***** -->
+    <div id="js-preloader" class="js-preloader">
+        <div class="preloader-inner">
+            <span class="dot"></span>
+            <div class="dots"><span></span><span></span><span></span></div>
+        </div>
+    </div>
+
+    <!-- ***** Header ***** -->
+    <header class="header-area header-sticky background-header">
+        <div class="container">
+            <div class="row">
+                <div class="col-12">
+                    <nav class="main-nav">
+                        <div class="logo-container">
+                            <a href="index.html" class="logo">Ction<em> Sports</em></a>
+                            <img src="assets/images/Logo.webp" alt="logo">
+                        </div>
+                        <li class="theme-toggle-wrapper">
+                            <button id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle Dark Mode"><i
+                                    class="fa fa-moon"></i></button>
+                        </li>
+                        <ul class="nav">
+                            <li><a href="./index.html">الرئيسية</a></li>
+                            <li><a href="./products.html">المنتجات</a></li>
+                            <!-- الروابط هنا هتروح لـ pages.html مع باراميتر -->
+                            <li><a href="pages.html?type=about">من نحن</a></li>
+                            <li><a href="./index.html#contact-us">تواصل معنا</a></li>
+                            <li class="profile-link" hidden><a href="./profile.html" class="profile-button"><i
+                                        class="fa fa-user"></i></a></li>
+
+                            <li class="main-button auth-action auth-action-logout" hidden><button type="button"
+                                    class="login-btn" data-auth-action="logout">تسجيل الخروج</button></li>
+                            <li class="main-button auth-action auth-action-login"><a href="#" class="login-btn"
+                                    data-auth-action="login">تسجيل الدخول</a></li>
+                        </ul>
+
+                        <!-- Login/Signup Popups Included -->
+                        <div id="loginPopup" class="popup">
+                            <div class="popup-content">
+                                <span class="close-btn" onclick="hidePopup('login')">&times;</span>
+                                <form id="loginForm">
+                                    <div class="input-group">
+                                        <label for="loginEmail">البريد الإلكتروني</label>
+                                        <input type="email" id="loginEmail" required>
+                                    </div>
+
+                                    <div class="input-group">
+                                        <label for="loginPassword">كلمة المرور</label>
+                                        <input type="password" id="loginPassword" required>
+                                    </div> <button type="submit" class="login-btn" id="loginSubmit">تسجيل
+                                        الدخول</button>
+                                    <div id="loginFormMessage" class="form-message"></div>
+                                </form>
+                                <p class="auth-helper"><a class="password-reset-link">نسيت كلمة المرور؟</a></p>
+                                <p>ليس لديك حساب؟ <a class="signup-link" onclick="showPopup('signup')">انشاء حساب</a>
+                                </p>
+                            </div>
+                        </div>
+                        <div id="signupPopup" class="popup">
+                            <div class="popup-content">
+                                <span class="close-btn" onclick="hidePopup('signup')">&times;</span>
+                                <form id="signupForm">
+                                    <div class="input-group">
+                                        <label for="signupName">الاسم الكامل</label>
+                                        <input type="text" id="signupName" required>
+                                    </div>
+
+                                    <div class="input-group">
+                                        <label for="signupEmail">البريد الإلكتروني</label>
+                                        <input type="email" id="signupEmail" required>
+                                    </div>
+
+                                    <div class="input-group">
+                                        <label for="signupPassword">كلمة المرور</label>
+                                        <input type="password" id="signupPassword" required>
+                                    </div>
+                                    <button type="submit" class="login-btn" id="signupSubmit">انشاء حساب</button>
+                                    <div id="signupFormMessage" class="form-message"></div>
+                                </form>
+                            </div>
+                        </div>
+                        <a class='menu-trigger'><span>القائمة</span></a>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- ***** Dynamic Content Section ***** -->
+    <section class="static-page-section">
+        <div class="container">
+            <!-- سيتم حقن العنوان هنا بواسطة JS -->
+            <div id="dynamic-page-header" class="static-page-header">
+                <h1><span id="page-title-text"></span> <em><span id="page-title-highlight"></span></em></h1>
+                <p id="page-subtitle"></p>
+            </div>
+
+            <!-- سيتم حقن المحتوى هنا بواسطة JS -->
+            <div id="dynamic-content-container">
+                <div class="static-content-box">
+                    <div class="loading-spinner" style="text-align: center; padding: 40px;">
+                        <i class="fa fa-spinner fa-spin" style="font-size: 40px; color: var(--primary-color);"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ***** Cart Sidebar ***** -->
+    <div id="cart-popup" class="cart-popup">
+        <div class="cart-popup-overlay"></div>
+        <div class="cart-popup-content">
+            <div class="cart-popup-header">
+                <h2>سلة المشتريات</h2>
+                <button id="close-cart-btn" class="close-cart-btn">&times;</button>
+            </div>
+            <div id="cart-items-list" class="cart-items-list">
+                <p class="cart-empty-msg">سلة المشتريات فارغة.</p>
+            </div>
+            <div class="cart-popup-footer">
+                <div class="cart-total">
+                    <strong>الإجمالي:</strong> <span id="cart-total-price">0 </span>
+                </div>
+                <a href="./cart.html" class="main-button checkout-btn">إتمام الشراء</a>
+            </div>
+        </div>
+    </div>
+
+    <div id="add-to-cart-toast" class="add-to-cart-toast">
+        تمت إضافة المنتج إلى السلة بنجاح!
+    </div>
+
+    <!-- ***** Footer ***** -->
+    <footer>
+        <div class="container">
+            <div class="row">
+                <div class="col-12">
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- ***** Cart Sidebar Start ***** -->
+    <div id="cart-popup" class="cart-popup">
+        <div class="cart-popup-overlay"></div>
+        <div class="cart-popup-content">
+            <div class="cart-popup-header">
+                <h2>سلة المشتريات</h2>
+                <button id="close-cart-btn" class="close-cart-btn">&times;</button>
+            </div>
+            <div id="cart-items-list" class="cart-items-list">
+                <p class="cart-empty-msg">سلة المشتريات فارغة.</p>
+            </div>
+            <div class="cart-popup-footer">
+                <div class="cart-total">
+                    <strong>الإجمالي:</strong> <span id="cart-total-price">0 </span>
+                </div>
+                <a href="./cart.html" class="main-button checkout-btn">إتمام الشراء</a>
+            </div>
+        </div>
+    </div>
+    <!-- ***** Cart Sidebar End ***** -->
+
+    <!-- ***** Add to Cart Toast Start ***** -->
+    <div id="add-to-cart-toast" class="add-to-cart-toast">
+        تمت إضافة المنتج إلى السلة بنجاح!
+    </div>
+    <!-- ***** Add to Cart Toast End ***** -->
+    <!------------------------------ Footer ------------------------------>
+    <footer class="site-footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-grid">
+                    <!-- About Store -->
+                    <div class="footer-column">
+                        <h4>عن المتجر</h4>
+                        <ul>
+                            <li><a href="pages.html?type=about">من نحن</a></li>
+                            <li><a href="pages.html?type=vision">رؤيتنا ورسالتنا</a></li>
+                            <li><a href="pages.html?type=privacy">سياسة الخصوصية</a></li>
+                            <li><a href="pages.html?type=terms">شروط الاستخدام</a></li>
+                            <li><a href="pages.html?type=careers">الوظائف</a></li>
+                        </ul>
+                        <!-- QR Code Section -->
+                        <div class="qr-section">
+                            <div class="qr-content">
+                                <div class="qr-image-wrapper">
+                                    <a class="qr-badge" href="https://linktr.ee/actionsports.ksa" target="_blank"
+                                        rel="noopener noreferrer" aria-label="Linktr">مسح</a>
+                                    <img class="qr-image"
+                                        src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://linktr.ee/actionsports.ksa&bgcolor=ffffff&color=e74c3c&margin=1&qzone=1"
+                                        alt="QR Code - Action Sports">
+                                </div>
+                                <div class="qr-text">
+                                    <p>امسح الكود للوصول إلى جميع صفحاتنا على مواقع التواصل الاجتماعي</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Customer Support -->
+                    <div class="footer-column">
+                        <h4>دعم العملاء</h4>
+                        <ul>
+                            <li><a href="pages.html?type=faq">الأسئلة الشائعة</a></li>
+                            <li><a href="pages.html?type=shipping">سياسة الشحن</a></li>
+                            <li><a href="pages.html?type=returns">الإرجاع والاستبدال</a></li>
+                            <li><a href="pages.html?type=warranty">الضمان</a></li>
+                        </ul>
+                    </div>
+
+                    <!-- Quick Links -->
+                    <div class="footer-column">
+                        <h4>روابط سريعة</h4>
+                        <ul>
+                            <li><a href="./products.html">جميع المنتجات</a></li>
+                            <li><a href="./index.html#call-to-action">العروض والخصومات</a></li>
+                            <li><a href="./index.html#trainers">احدث المنتجات</a></li>
+                            <li><a href="./profile.html">حسابي</a></li>
+                            <li><a href="./cart.html">سلة المشتريات</a></li>
+                        </ul>
+                    </div>
+
+                    <!-- Contact & Payment -->
+                    <div class="footer-column">
+                        <h4>تواصل معنا</h4>
+
+                        <div class="contact-info">
+                            <div class="contact-item">
+                                <div class="contact-icon">
+                                    <img src="assets/images/gmail.svg" alt="Gmail" class="icon-img">
+                                </div>
+
+
+                                <a href="https://mail.google.com/mail/?view=cm&fs=1&to=actionsports.ksa@gmail.com"
+                                    target="_blank" target="_blank" rel="noopener noreferrer" dir="ltr" id="email-text"
+                                    style="text-decoration: none; color: #5fabf8; margin-left: 8px;">
+                                    actionsports.ksa@gmail.com
+                                </a>
+                                <button onclick="copyContent('email-text', 'email-copy-btn')" id="email-copy-btn"
+                                    class="copy-button" title="نسخ الإيميل">
+                                    📋
+                                </button>
+                            </div>
+                            <div class="contact-item">
+                                <div class="contact-icon">
+                                    <img src="assets/images/whatsapp.svg" alt="WhatsApp" class="icon-img">
+                                </div>
+
+                                <a href="https://wa.me/966552656332" target="_blank" dir="ltr" rel="noopener noreferrer"
+                                    id="phone-text" style="text-decoration: none; color: #5fabf8; margin-left: 8px;">
+                                    +966 55 265 6332
+                                </a>
+
+                                <button onclick="copyContent('phone-text', 'phone-copy-btn')" id="phone-copy-btn"
+                                    class="copy-button" title="نسخ الرقم">
+                                    📋
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Payment Methods -->
+                        <div class="payment-section">
+                            <div class="section-title">طرق الدفع</div>
+                            <div class="pay-icons">
+                                <!-- Mastercard -->
+                                <div class="pay-icon">
+                                    <img src="./assets/images/masterCard.svg" alt="Mastercard">
+                                </div>
+
+                                <!-- Visa -->
+                                <div class="pay-icon">
+                                    <img src="./assets/images/visa.svg" alt="Visa">
+                                </div>
+
+                                <!-- Tabby -->
+                                <div class="pay-icon">
+                                    <img src="./assets/images/tabby.svg" alt="Tabby">
+                                </div>
+
+                                <!-- Tamara -->
+                                <div class="pay-icon">
+                                    <img src="./assets/images/tamara.svg" alt="Tamara">
+                                </div>
+
+                                <!-- Apple Pay -->
+                                <div class="pay-icon">
+                                    <img src="./assets/images/applePay.svg" alt="Apple Pay">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Social Media -->
+                        <div class="social-section">
+                            <div class="section-title">تابعنا</div>
+                            <div class="social-links">
+                                <a class="social-link" href="https://www.facebook.com/profile.php?id=61578038102583"
+                                    target="_blank" rel="noopener noreferrer" aria-label="Facebook">
+                                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path
+                                            d="M12 2C6.477 2 2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.879V14.89h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.989C18.343 21.129 22 16.99 22 12c0-5.523-4.477-10-10-10z" />
+                                    </svg>
+                                </a>
+                                <a class="social-link" href="https://www.instagram.com/actionsportsksa" target="_blank"
+                                    rel="noopener noreferrer" aria-label="Instagram">
+                                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path
+                                            d="M12 2c2.717 0 3.056.01 4.122.06 1.065.05 1.79.217 2.428.465.66.254 1.216.598 1.772 1.153.509.5.902 1.105 1.153 1.772.247.637.415 1.363.465 2.428.047 1.066.06 1.405.06 4.122 0 2.717-.01 3.056-.06 4.122-.05 1.065-.218 1.79-.465 2.428a4.883 4.883 0 01-1.153 1.772c-.5.508-1.105.902-1.772 1.153-.637.247-1.363.415-2.428.465-1.066.047-1.405.06-4.122.06-2.717 0-3.056-.01-4.122-.06-1.065-.05-1.79-.218-2.428-.465a4.89 4.89 0 01-1.772-1.153 4.904 4.904 0 01-1.153-1.772c-.248-.637-.415-1.363-.465-2.428C2.013 15.056 2 14.717 2 12c0-2.717.01-3.056.06-4.122.05-1.066.217-1.79.465-2.428a4.88 4.88 0 011.153-1.772A4.897 4.897 0 015.45 2.525c.638-.248 1.362-.415 2.428-.465C8.944 2.013 9.283 2 12 2zm0 5a5 5 0 100 10 5 5 0 000-10zm6.5-.25a1.25 1.25 0 10-2.5 0 1.25 1.25 0 002.5 0zM12 9a3 3 0 110 6 3 3 0 010-6z" />
+                                    </svg>
+                                </a>
+                                <a class="social-link" href="https://www.tiktok.com/@actionsportsksa" target="_blank"
+                                    rel="noopener noreferrer" aria-label="Tiktok">
+                                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path
+                                            d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-5.2 1.74 2.89 2.89 0 012.31-4.64 2.93 2.93 0 01.88.13V9.4a6.84 6.84 0 00-1-.05A6.33 6.33 0 005 20.1a6.34 6.34 0 0010.86-4.43v-7a8.16 8.16 0 004.77 1.52v-3.4a4.85 4.85 0 01-1-.1z" />
+                                    </svg>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="footer-bottom">
+                <div class="footer-bottom-content">
+                    <div class="copyright">
+                        <div class="copyright-icon">©</div>
+                        <span>2025 جميع الحقوق محفوظة - Action Sports</span>
+                    </div>
+                    <div class="footer-links">
+                        <a href="pages.html?type=terms">الشروط والأحكام</a>
+                        <a href="pages.html?type=returns">سياسة الاسترجاع</a>
+                        <a href="./index.html#contact-us">خريطة الموقع</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+    <!-- ---------------------------- End Footer ---------------------------- -->
+    <!-- Scripts -->
+    <!-- Security: DOMPurify for XSS protection (required by page-renderer.js) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.2.7/purify.min.js"></script>
+    <script src="assets/js/config.js"></script>
+    <script src="assets/js/script.js"></script>
+    <script src="assets/js/footer-scripts.js"></script>
+    <!-- ملفات البيانات والتشغيل للصفحات الديناميكية -->
+    <script src="assets/js/pages-data.js"></script>
+    <script src="assets/js/page-renderer.js"></script>
+
+</body>
+
+</html>

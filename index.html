@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <!-- <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com; font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com data:; img-src 'self' data: https://cdnjs.cloudflare.com https://fonts.gstatic.com https://fonts.googleapis.com https://*.cloudinary.com https://api.qrserver.com blob:; connect-src 'self' https://action-sports-api.vercel.app https://api.actionsports4u.com https://cdnjs.cloudflare.com; media-src 'self' blob:; frame-src 'self' https://www.google.com https://*.google.com; object-src 'none'; base-uri 'self'; form-action 'self'; worker-src 'self' blob:; manifest-src 'self'; upgrade-insecure-requests;">    <meta name="description" content="متجر إلكتروني لبيع الأجهزة الرياضية"> -->
+    <link rel="apple-touch-icon" sizes="57x57" href="./assets/images/Logo.png">
+    <link rel="apple-touch-icon" sizes="60x60" href="./assets/images/Logo.png">
+    <link rel="apple-touch-icon" sizes="72x72" href="./assets/images/Logo.png">
+    <link rel="apple-touch-icon" sizes="76x76" href="./assets/images/Logo.png">
+    <link rel="apple-touch-icon" sizes="114x114" href="./assets/images/Logo.png">
+    <link rel="apple-touch-icon" sizes="120x120" href="./assets/images/Logo.png">
+    <link rel="apple-touch-icon" sizes="144x144" href="./assets/images/Logo.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="./assets/images/Logo.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="./assets/images/Logo.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="./assets/images/Logo.png"> <!-- الحجم الأكبر المدعوم -->
+    <link rel="icon" type="image/png" sizes="32x32" href="./assets/images/Logo.png">
+    <link rel="icon" type="image/png" sizes="64x64" href="./assets/images/Logo.png">
+    <link rel="icon" type="image/png" sizes="96x96" href="./assets/images/Logo.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="./assets/images/Logo.png">
+    <link rel="manifest" href="./favicon/manifest.json">
+    <meta name="msapplication-TileColor" content="#ffffff">
+    <meta name="msapplication-TileImage" content="./assets/images/Logo.png">
+    <meta name="theme-color" content="#ffffff">
+    <meta name="author" content="Saftawy">
+    <link
+        href="https://fonts.googleapis.com/css?family=Poppins:100,100i,200,200i,300,300i,400,400i,500,500i,600,600i,700,700i,800,800i,900,900i&display=swap"
+        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <title>Action Sports</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+        integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="assets/css/style-rtl.css">
+    <link rel="stylesheet" href="assets/css/home.css">
+    <link rel="stylesheet" href="assets/css/popup.css">
+    <link rel="stylesheet" href="assets/css/cart.css">
+
+</head>
+
+<body>
+    <!-- ***** Preloader Start ***** -->
+    <div id="js-preloader" class="js-preloader">
+        <div class="preloader-inner">
+            <span class="dot"></span>
+            <div class="dots">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </div>
+    <!-- ***** Preloader End ***** -->
+
+    <!-- ***** Header Area Start ***** -->
+    <header class="header-area header-sticky">
+        <div class="container">
+            <div class="row">
+                <div class="col-12">
+                    <nav class="main-nav">
+                        <!-- ***** Logo Start ***** -->
+                        <div class="logo-container">
+                            <a href="index.html" class="logo">Ction<em> Sports</em></a>
+                            <img src="assets/images/Logo.webp" alt="logo">
+                        </div>
+                        <li class="theme-toggle-wrapper">
+                            <button id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle Dark Mode">
+                                <i class="fa fa-moon"></i>
+                            </button>
+                        </li>
+
+                        <!-- ***** Logo End ***** -->
+                        <!-- ***** Menu Start ***** -->
+                        <ul class="nav">
+                            <li class="scroll-to-section"><a href="#top" class="active">الرئيسية</a></li>
+                            <li class="scroll-to-section"><a href="#features">الفئات</a></li>
+                            <li><a href="./products.html">المنتجات</a></li>
+                            <li class="scroll-to-section"><a href="#contact-us">تواصل معنا</a></li>
+                            <li class="profile-link" hidden>
+                                <a href="./profile.html" class="profile-button" title="حسابي">
+                                    <i class="fa-solid fa-user"></i>
+                                </a>
+                            </li>
+                            <li class="cart-icon-wrapper">
+                                <a href="#" id="cart-icon">
+                                    <img src="assets/images/cart-icon.png" alt="سلة المشتريات" class="cart-img-icon">
+                                    <span id="cart-count">0</span>
+                                </a>
+                            </li>
+                            <li class="main-button auth-action auth-action-logout" hidden>
+                                <button type="button" class="login-btn" data-auth-action="logout">تسجيل الخروج</button>
+                            </li>
+                            <li class="main-button auth-action auth-action-login">
+                                <a href="#" class="login-btn" data-auth-action="login">تسجيل الدخول</a>
+                            </li>
+
+                        </ul>
+                        <!-- Login Popup -->
+                        <div id="loginPopup" class="popup">
+                            <div class="popup-content">
+                                <span class="close-btn" onclick="hidePopup('login')">&times;</span>
+                                <form id="loginForm">
+                                    <div class="input-group">
+                                        <input type="email" id="loginEmail" name="email" required>
+                                        <label for="loginEmail">البريد الإلكتروني</label>
+                                        <span class="input-error" data-error-for="loginEmail"></span>
+                                    </div>
+                                    <div class="input-group">
+                                        <input type="password" id="loginPassword" name="password" required>
+                                        <label for="loginPassword">كلمة المرور</label>
+                                        <span class="input-error" data-error-for="loginPassword"></span>
+                                    </div>
+                                    <button type="submit" class="login-btn" id="loginSubmit"
+                                        data-loading-text="جاري تسجيل الدخول...">تسجيل الدخول</button>
+                                    <div id="loginFormMessage" class="form-message" role="alert" aria-live="polite">
+                                    </div>
+                                </form>
+                                <p class="auth-helper">
+                                    <a class="password-reset-link" data-action="forgot-password">نسيت كلمة المرور؟</a>
+                                </p>
+                                <p>ليس لديك حساب؟ <a class="signup-link" onclick="showPopup('signup')">انشاء حساب</a>
+                                </p>
+                            </div>
+                        </div>
+                        <!-- Signup Popup -->
+                        <div id="signupPopup" class="popup">
+                            <div class="popup-content">
+                                <span class="close-btn" onclick="hidePopup('signup')">&times;</span>
+                                <form id="signupForm">
+                                    <div class="input-group">
+                                        <input type="text" id="signupName" name="name" required>
+                                        <label for="signupName">الاسم الكامل</label>
+                                        <span class="input-error" data-error-for="signupName"></span>
+                                    </div>
+                                    <div class="input-group">
+                                        <input type="email" id="signupEmail" name="email" required>
+                                        <label for="signupEmail">البريد الإلكتروني</label>
+                                        <span class="input-error" data-error-for="signupEmail"></span>
+                                    </div>
+                                    <div class="input-group">
+                                        <input type="tel" id="signupPhone" name="phone" inputmode="tel"
+                                            pattern="\d{8,15}" required>
+                                        <label for="signupPhone">رقم الهاتف</label>
+                                        <span class="input-error" data-error-for="signupPhone"></span>
+                                    </div>
+                                    <div class="input-group">
+                                        <input type="password" id="signupPassword" name="password" minlength="6"
+                                            required>
+                                        <label for="signupPassword">كلمة المرور</label>
+                                        <span class="input-error" data-error-for="signupPassword"></span>
+                                    </div>
+                                    <div class="input-group">
+                                        <input type="password" id="signupPasswordConfirm" name="passwordConfirm"
+                                            minlength="6" required>
+                                        <label for="signupPasswordConfirm">تأكيد كلمة المرور</label>
+                                        <span class="input-error" data-error-for="passwordConfirm"></span>
+                                    </div>
+                                    <button type="submit" class="login-btn" id="signupSubmit"
+                                        data-loading-text="جاري إنشاء الحساب...">انشاء حساب</button>
+                                    <div id="signupFormMessage" class="form-message" role="alert" aria-live="polite">
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                        <a class='menu-trigger'>
+                            <span>القائمة</span>
+                        </a>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </header>
+    <!-- ***** Header Area End ***** -->
+
+    <!-- ***** Main Banner Area Start ***** -->
+    <div class="main-banner" id="top">
+        <video autoplay muted loop playsinline id="bg-video">
+            <source src="assets/images/gym-video.mp4" type="video/mp4" />
+        </video>
+        <div class="video-overlay header-text">
+            <div class="caption">
+                <h6>تمرّن بجد، كن أقوى</h6>
+                <h2>تجهيزك للبطولة يبدأ من <em>هنا</em></h2>
+                <div class="main-button">
+                    <a href="./products.html">تصفح المنتجات</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- ***** Main Banner Area End ***** -->
+
+    <!-- ***** Categories Start ***** -->
+    <section class="section" id="features">
+        <div class="container">
+            <div class="categories">
+                <div class="col-lg-6 col-offset-lg-3">
+                    <div class="section-heading">
+                        <h2>تصفح <em>الفئات</em></h2>
+                        <img src="assets/images/line-dec.png" alt="waves">
+                        <p>اختر الفئة التي تناسب احتياجك، سواء للمنزل أو لصالة الألعاب الرياضية.</p>
+                    </div>
+                </div>
+                <div class="colum">
+                    <ul class="features-items" id="categoriesColumnLeft">
+                        <li class="feature-item skeleton-card" aria-hidden="true">
+                            <div class="skeleton skeleton-thumb"></div>
+                            <div class="down-content">
+                                <div class="skeleton skeleton-line"></div>
+                                <div class="skeleton skeleton-line short"></div>
+                                <div class="skeleton skeleton-button"></div>
+                            </div>
+                        </li>
+                        <li class="feature-item skeleton-card" aria-hidden="true">
+                            <div class="skeleton skeleton-thumb"></div>
+                            <div class="down-content">
+                                <div class="skeleton skeleton-line"></div>
+                                <div class="skeleton skeleton-line short"></div>
+                                <div class="skeleton skeleton-button"></div>
+                            </div>
+                        </li>
+                    </ul>
+                    <div id="categoriesColumnRight" style="display: none;"></div>
+                    <div class="categories-feedback empty-state-container" id="categoriesEmptyState" hidden>
+                        <i class="fas fa-tags empty-state-icon"></i>
+                        <p>لا توجد فئات متاحة حالياً.</p>
+                    </div>
+                    <div class="load-more-container" style="text-align: center; margin-top: 40px;">
+                        <button id="loadMoreCategoriesBtn" class="load-more-btn" hidden>تحميل المزيد من الفئات</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- ***** Categories End ***** -->
+
+    <!-- ***** Featured Product Start ***** -->
+    <section class="section" id="call-to-action">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-10 col-offset-lg-1">
+                    <div class="cta-content" id="homepageBanner">
+                        <div class="cta-banner-layout">
+                            <div class="cta-banner-media">
+                                <img id="homepageBannerImage" src="assets/images/cta-bg.jpg"
+                                    alt="عرض خاص من أكشن سبورتس">
+                            </div>
+                            <div class="cta-banner-info">
+                                <h2 id="homepageBannerTitle">عرض خاص! <em>خصم 30%</em> على المشاية الكهربائية</h2>
+                                <p id="homepageBannerDescription">احصل على المشاية الكهربائية الذكية طراز X-25 الآن بخصم
+                                    حصري. كمية محدودة!</p>
+                            </div>
+                        </div>
+                        <div class="cta-banner-slider-controls" id="homepageBannerSlider" aria-live="polite">
+                            <button type="button" class="banner-nav-btn" id="homepageBannerPrev"
+                                aria-label="العرض السابق">
+                                <i class="fa fa-chevron-right"></i>
+                            </button>
+                            <div class="banner-indicators" id="homepageBannerIndicators" role="tablist"></div>
+                            <button type="button" class="banner-nav-btn" id="homepageBannerNext"
+                                aria-label="العرض التالي">
+                                <i class="fa fa-chevron-left"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <!-- Forgot Password Popup -->
+                    <div id="forgotPasswordPopup" class="popup" hidden>
+                        <div class="popup-content">
+                            <span class="close-btn" data-close-popup="forgotPassword">&times;</span>
+                            <form id="forgotPasswordForm">
+                                <div class="input-group">
+                                    <input type="email" id="forgotPasswordEmail" name="email" required>
+                                    <label for="forgotPasswordEmail">البريد الإلكتروني</label>
+                                    <span class="input-error" data-error-for="forgotPasswordEmail"></span>
+                                </div>
+                                <button type="submit" class="login-btn" id="forgotPasswordSubmit"
+                                    data-loading-text="جاري الإرسال...">إرسال</button>
+                                <div id="forgotPasswordMessage" class="form-message" role="alert" aria-live="polite">
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    <!-- OTP Verification Popup -->
+                    <div id="otpPopup" class="popup" hidden>
+                        <div class="popup-content">
+                            <span class="close-btn" data-close-popup="otp">&times;</span>
+                            <form id="otpForm">
+                                <p class="otp-instructions">أدخل رمز التحقق المرسل إلى بريدك الإلكتروني.</p>
+                                <div class="input-group">
+                                    <input type="text" id="otpCode" name="otpCode" inputmode="numeric" pattern="[0-9]*"
+                                        maxlength="6" placeholder="أدخل رمز التحقق" required>
+                                    <span class="input-error" data-error-for="otpCode"></span>
+                                </div>
+                                <button type="submit" class="login-btn" id="otpSubmit"
+                                    data-loading-text="جاري التحقق...">تأكيد</button>
+                                <div class="resend-otp-container">
+                                    <button type="button" id="resendOtpBtn" class="resend-otp-btn">إعادة إرسال رمز
+                                        التحقق</button>
+                                    <span id="resendTimer" class="resend-timer"></span>
+                                </div>
+                                <div id="otpFormMessage" class="form-message" role="alert" aria-live="polite"></div>
+                            </form>
+                        </div>
+                    </div>
+                    <!-- Reset Password Popup -->
+                    <div id="resetPasswordPopup" class="popup" hidden>
+                        <div class="popup-content">
+                            <span class="close-btn" data-close-popup="resetPassword">&times;</span>
+                            <form id="resetPasswordForm">
+                                <p class="otp-instructions">أدخل كلمة المرور الجديدة للحساب.</p>
+                                <div class="input-group">
+                                    <input type="password" id="newPassword" name="newPassword" minlength="6" required>
+                                    <label for="newPassword">كلمة المرور الجديدة</label>
+                                    <span class="input-error" data-error-for="newPassword"></span>
+                                </div>
+                                <div class="input-group">
+                                    <input type="password" id="confirmPassword" name="confirmPassword" minlength="6"
+                                        required>
+                                    <label for="confirmPassword">تأكيد كلمة المرور</label>
+                                    <span class="input-error" data-error-for="confirmPassword"></span>
+                                </div>
+                                <button type="submit" class="login-btn" id="resetPasswordSubmit"
+                                    data-loading-text="جاري التحديث...">تحديث كلمة المرور</button>
+                                <div id="resetPasswordMessage" class="form-message" role="alert" aria-live="polite">
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- ***** Featured Product End ***** -->
+
+    <!-- ***** Products Start ***** -->
+    <section class="section" id="trainers">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-6 col-offset-lg-3" id="productsHeading">
+                    <div class="section-heading">
+                        <h2>أحدث <em>المنتجات</em></h2>
+                        <img src="assets/images/line-dec.png" alt="">
+                        <p>تصفح مجموعتنا المختارة من أفضل الأجهزة الرياضية عالية الجودة.</p>
+                    </div>
+                </div>
+                <div class="row" id="latestProductsGrid">
+                    <div class="col-lg-4 col-md-6">
+                        <div class="product-card skeleton-card" aria-hidden="true">
+                            <div class="skeleton skeleton-thumb"></div>
+                            <div class="skeleton-stack">
+                                <span class="skeleton skeleton-chip"></span>
+                                <div class="skeleton skeleton-line"></div>
+                                <div class="skeleton skeleton-line short"></div>
+                                <div class="skeleton skeleton-price"></div>
+                            </div>
+                            <div class="skeleton-button-group">
+                                <span class="skeleton skeleton-button"></span>
+                                <span class="skeleton skeleton-button"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 col-md-6">
+                        <div class="product-card skeleton-card" aria-hidden="true">
+                            <div class="skeleton skeleton-thumb"></div>
+                            <div class="skeleton-stack">
+                                <span class="skeleton skeleton-chip"></span>
+                                <div class="skeleton skeleton-line"></div>
+                                <div class="skeleton skeleton-line short"></div>
+                                <div class="skeleton skeleton-price"></div>
+                            </div>
+                            <div class="skeleton-button-group">
+                                <span class="skeleton skeleton-button"></span>
+                                <span class="skeleton skeleton-button"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 col-md-6">
+                        <div class="product-card skeleton-card" aria-hidden="true">
+                            <div class="skeleton skeleton-thumb"></div>
+                            <div class="skeleton-stack">
+                                <span class="skeleton skeleton-chip"></span>
+                                <div class="skeleton skeleton-line"></div>
+                                <div class="skeleton skeleton-line short"></div>
+                                <div class="skeleton skeleton-price"></div>
+                            </div>
+                            <div class="skeleton-button-group">
+                                <span class="skeleton skeleton-button"></span>
+                                <span class="skeleton skeleton-button"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="products-feedback empty-state-container" id="productsEmptyState" hidden>
+                    <i class="fas fa-dumbbell empty-state-icon"></i>
+                    <p>لا توجد منتجات متاحة حالياً.</p>
+                </div>
+                <div class="row" id="moreProductsContainer">
+                    <div class="col-12">
+                        <div class="main-button more-products-container">
+                            <a href="./products.html">عرض المزيد من المنتجات</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- ***** Products Ends ***** -->
+
+    <!-- ***** Contact Us Area Starts ***** -->
+    <section class="section" id="contact-us">
+        <div class="container-fluid">
+            <div class="row">
+                <div class="col-md-6 col-xs-12">
+                    <div id="map">
+                        <iframe class="map-frame"
+                            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d29003.718457307037!2d46.71291156523436!3d24.6765437!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3e2f03b2b8b8d843%3A0xbdbf8971459ad4fc!2sAction%20sports!5e0!3m2!1sar!2seg!4v1766749676492!5m2!1sar!2seg"
+                            width="100%" height="600px" frameborder="0" allowfullscreen></iframe>
+
+                    </div>
+                </div>
+                <div class="col-lg-6 col-md-6 col-xs-12">
+                    <div class="contact-form">
+                        <form id="contact" action="" method="post">
+                            <div class="row">
+                                <div class="col-md-6 col-sm-12">
+                                    <fieldset>
+                                        <input name="name" type="text" id="name" placeholder="اسمك*" required="">
+                                    </fieldset>
+                                </div>
+                                <div class="col-md-6 col-sm-12">
+                                    <fieldset>
+                                        <input name="email" type="text" id="email" pattern="[^ @]*@[^ @]*"
+                                            placeholder="بريدك الإلكتروني*" required="">
+                                    </fieldset>
+                                </div>
+                                <div class="col-12">
+                                    <fieldset>
+                                        <input name="subject" type="text" id="subject" placeholder="الموضوع">
+                                    </fieldset>
+                                </div>
+                                <div class="col-12">
+                                    <fieldset>
+                                        <textarea name="message" rows="6" id="message" placeholder="رسالتك"
+                                            required=""></textarea>
+                                    </fieldset>
+                                </div>
+                                <div class="col-12">
+                                    <fieldset>
+                                        <button type="submit" id="form-submit" class="main-button">إرسال
+                                            الرسالة</button>
+                                    </fieldset>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- ***** Contact Us Area Ends ***** -->
+
+    <!-- ***** Footer Start ***** -->
+    <footer class="site-footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-grid">
+                    <!-- About Store -->
+                    <div class="footer-column">
+                        <h4>عن المتجر</h4>
+                        <ul>
+                            <li><a href="pages.html?type=about">من نحن</a></li>
+                            <li><a href="pages.html?type=vision">رؤيتنا ورسالتنا</a></li>
+                            <li><a href="pages.html?type=privacy">سياسة الخصوصية</a></li>
+                            <li><a href="pages.html?type=terms">شروط الاستخدام</a></li>
+                            <li><a href="pages.html?type=careers">الوظائف</a></li>
+                        </ul>
+                        <!-- QR Code Section -->
+                        <div class="qr-section">
+                            <div class="qr-content">
+                                <div class="qr-image-wrapper">
+                                    <a class="qr-badge" href="https://linktr.ee/actionsports.ksa" target="_blank"
+                                        rel="noopener noreferrer" aria-label="Linktr">مسح</a>
+                                    <img class="qr-image"
+                                        src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://linktr.ee/actionsports.ksa&bgcolor=ffffff&color=e74c3c&margin=1&qzone=1"
+                                        alt="QR Code - Action Sports">
+                                </div>
+                                <div class="qr-text">
+                                    <p>امسح الكود للوصول إلى جميع صفحاتنا على مواقع التواصل الاجتماعي</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Customer Support -->
+                    <div class="footer-column">
+                        <h4>دعم العملاء</h4>
+                        <ul>
+                            <li><a href="pages.html?type=faq">الأسئلة الشائعة</a></li>
+                            <li><a href="pages.html?type=shipping">سياسة الشحن</a></li>
+                            <li><a href="pages.html?type=returns">الإرجاع والاستبدال</a></li>
+                            <li><a href="pages.html?type=warranty">الضمان</a></li>
+                        </ul>
+                    </div>
+
+                    <!-- Quick Links -->
+                    <div class="footer-column">
+                        <h4>روابط سريعة</h4>
+                        <ul>
+                            <li><a href="./products.html">جميع المنتجات</a></li>
+                            <li><a href="./index.html#call-to-action">العروض والخصومات</a></li>
+                            <li><a href="./index.html#trainers">احدث المنتجات</a></li>
+                            <li><a href="./profile.html">حسابي</a></li>
+                            <li><a href="./cart.html">سلة المشتريات</a></li>
+                        </ul>
+                    </div>
+
+                    <!-- Contact & Payment -->
+                    <div class="footer-column">
+                        <h4>تواصل معنا</h4>
+
+                        <div class="contact-info">
+                            <div class="contact-item">
+                                <div class="contact-icon">
+                                    <img src="assets/images/gmail.svg" alt="Gmail" class="icon-img">
+                                </div>
+
+                                <a href="https://mail.google.com/mail/?view=cm&fs=1&to=actionsports.ksa@gmail.com"
+                                    target="_blank" rel="noopener noreferrer" dir="ltr" id="email-text"
+                                    style="text-decoration: none; color: #5fabf8; margin-left: 8px;">
+                                    actionsports.ksa@gmail.com
+                                </a>
+
+                                <button onclick="copyContent('email-text', 'email-copy-btn')" id="email-copy-btn"
+                                    class="copy-button" title="نسخ الإيميل">
+                                    📋
+                                </button>
+                            </div>
+                            <div class="contact-item">
+                                <div class="contact-icon">
+                                    <img src="assets/images/whatsapp.svg" alt="WhatsApp" class="icon-img">
+                                </div>
+
+                                <a href="https://wa.me/966552656332" target="_blank" dir="ltr" rel="noopener noreferrer"
+                                    id="phone-text" style="text-decoration: none; color: #5fabf8; margin-left: 8px;">
+                                    +966 55 265 6332
+                                </a>
+
+                                <button onclick="copyContent('phone-text', 'phone-copy-btn')" id="phone-copy-btn"
+                                    class="copy-button" title="نسخ الرقم">
+                                    📋
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Payment Methods -->
+                        <div class="payment-section">
+                            <div class="section-title">طرق الدفع</div>
+                            <div class="pay-icons">
+                                <!-- Mastercard -->
+                                <div class="pay-icon">
+                                    <img src="./assets/images/masterCard.svg" alt="Mastercard">
+                                </div>
+
+                                <!-- Visa -->
+                                <div class="pay-icon">
+                                    <img src="./assets/images/visa.svg" alt="Visa">
+                                </div>
+
+                                <!-- Tabby -->
+                                <div class="pay-icon">
+                                    <img src="./assets/images/tabby.svg" alt="Tabby">
+                                </div>
+
+                                <!-- Tamara -->
+                                <div class="pay-icon">
+                                    <img src="./assets/images/tamara.svg" alt="Tamara">
+                                </div>
+
+                                <!-- Apple Pay -->
+                                <div class="pay-icon">
+                                    <img src="./assets/images/applePay.svg" alt="Apple Pay">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Social Media -->
+                        <div class="social-section">
+                            <div class="section-title">تابعنا</div>
+                            <div class="social-links">
+                                <a class="social-link" href="https://www.facebook.com/profile.php?id=61578038102583"
+                                    target="_blank" rel="noopener noreferrer" aria-label="Facebook">
+                                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path
+                                            d="M12 2C6.477 2 2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.879V14.89h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.989C18.343 21.129 22 16.99 22 12c0-5.523-4.477-10-10-10z" />
+                                    </svg>
+                                </a>
+                                <a class="social-link" href="https://www.instagram.com/actionsportsksa" target="_blank"
+                                    rel="noopener noreferrer" aria-label="Instagram">
+                                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path
+                                            d="M12 2c2.717 0 3.056.01 4.122.06 1.065.05 1.79.217 2.428.465.66.254 1.216.598 1.772 1.153.509.5.902 1.105 1.153 1.772.247.637.415 1.363.465 2.428.047 1.066.06 1.405.06 4.122 0 2.717-.01 3.056-.06 4.122-.05 1.065-.218 1.79-.465 2.428a4.883 4.883 0 01-1.153 1.772c-.5.508-1.105.902-1.772 1.153-.637.247-1.363.415-2.428.465-1.066.047-1.405.06-4.122.06-2.717 0-3.056-.01-4.122-.06-1.065-.05-1.79-.218-2.428-.465a4.89 4.89 0 01-1.772-1.153 4.904 4.904 0 01-1.153-1.772c-.248-.637-.415-1.363-.465-2.428C2.013 15.056 2 14.717 2 12c0-2.717.01-3.056.06-4.122.05-1.066.217-1.79.465-2.428a4.88 4.88 0 011.153-1.772A4.897 4.897 0 015.45 2.525c.638-.248 1.362-.415 2.428-.465C8.944 2.013 9.283 2 12 2zm0 5a5 5 0 100 10 5 5 0 000-10zm6.5-.25a1.25 1.25 0 10-2.5 0 1.25 1.25 0 002.5 0zM12 9a3 3 0 110 6 3 3 0 010-6z" />
+                                    </svg>
+                                </a>
+                                <a class="social-link" href="https://www.tiktok.com/@actionsportsksa" target="_blank"
+                                    rel="noopener noreferrer" aria-label="Tiktok">
+                                    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                        <path
+                                            d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-5.2 1.74 2.89 2.89 0 012.31-4.64 2.93 2.93 0 01.88.13V9.4a6.84 6.84 0 00-1-.05A6.33 6.33 0 005 20.1a6.34 6.34 0 0010.86-4.43v-7a8.16 8.16 0 004.77 1.52v-3.4a4.85 4.85 0 01-1-.1z" />
+                                    </svg>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="footer-bottom">
+                <div class="footer-bottom-content">
+                    <div class="copyright">
+                        <div class="copyright-icon">©</div>
+                        <span>2025 جميع الحقوق محفوظة - Action Sports</span>
+                    </div>
+                    <div class="footer-links">
+                        <a href="pages.html?type=terms">الشروط والأحكام</a>
+                        <a href="pages.html?type=returns">سياسة الاسترجاع</a>
+                        <a href="./index.html#contact-us">خريطة الموقع</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- ***** Cart Sidebar Start ***** -->
+    <div id="cart-popup" class="cart-popup">
+        <div class="cart-popup-overlay"></div>
+        <div class="cart-popup-content">
+            <div class="cart-popup-header">
+                <h2>سلة المشتريات</h2>
+                <button id="close-cart-btn" class="close-cart-btn">&times;</button>
+            </div>
+            <div id="cart-items-list" class="cart-items-list">
+                <p class="cart-empty-msg">سلة المشتريات فارغة.</p>
+            </div>
+            <div class="cart-popup-footer">
+                <div class="cart-total">
+                    <strong>الإجمالي:</strong> <span id="cart-total-price">0 </span>
+                </div>
+                <a href="./cart.html" class="main-button checkout-btn">إتمام الشراء</a>
+            </div>
+        </div>
+    </div>
+    <!-- ***** Cart Sidebar End ***** -->
+
+    <!-- ***** Add to Cart Toast Start ***** -->
+    <div id="add-to-cart-toast" class="add-to-cart-toast">
+        تمت إضافة المنتج إلى السلة بنجاح!
+    </div>
+    <!-- ***** Add to Cart Toast End ***** -->
+
+    <!-- Global Init -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.2.7/purify.min.js"></script>
+    <script src="assets/js/config.js"></script>
+    <script src="assets/js/script.js"></script>
+</body>
+
+</html>
