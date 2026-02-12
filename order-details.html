@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="تفاصيل الفاتورة - متجر Action Sports">
+    
+    <link rel="apple-touch-icon" sizes="180x180" href="./assets/images/Logo.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="./assets/images/Logo.png">
+    <link rel="manifest" href="./favicon/manifest.json">
+    <meta name="msapplication-TileColor" content="#ffffff">
+    <meta name="msapplication-TileImage" content="./assets/images/Logo.png">
+    <meta name="theme-color" content="#ffffff">
+    <meta name="author" content="Saftawy">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <title>تفاصيل الفاتورة</title>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+        integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+    
+    <!-- Global RTL Styles -->
+    <link rel="stylesheet" href="assets/css/style-rtl.css">
+    
+    <!-- Order Details Styles -->
+    <link rel="stylesheet" href="assets/css/order-details.css">
+
+</head>
+
+<body>
+    <!-- ***** Preloader Start ***** -->
+    <div id="js-preloader" class="js-preloader">
+        <div class="preloader-inner">
+            <span class="dot"></span>
+            <div class="dots">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </div>
+    <!-- ***** Preloader End ***** -->
+
+    <main class="order-details-container">
+        <!-- Header -->
+        <header class="order-header">
+            <div class="order-header-content">
+                <div class="logo-section">
+                    <img src="./assets/images/Logo.webp" alt="Action Sports Logo" class="logo-img">
+                    <h1 class="logo-text">Action <span>Sports</span></h1>
+                </div>
+                <button id="print-btn" class="print-btn" title="طباعة الفاتورة" aria-label="طباعة الفاتورة">
+                    <i class="fas fa-print"></i> طباعة الفاتورة
+                </button>
+            </div>
+        </header>
+
+        <!-- Loading State -->
+        <section id="loadingState" class="invoice-state loading-state">
+            <div class="state-icon">
+                <i class="fas fa-spinner fa-spin"></i>
+            </div>
+            <p class="state-message">جاري تحميل الفاتورة...</p>
+        </section>
+
+        <!-- Error State -->
+        <section id="errorState" class="invoice-state error-state" hidden>
+            <div class="state-icon error-icon">
+                <i class="fas fa-exclamation-circle"></i>
+            </div>
+            <p class="state-message" id="errorMessage">تعذر تحميل الفاتورة</p>
+            <button id="retryBtn" class="retry-btn" aria-label="إعادة محاولة">
+                <i class="fas fa-redo"></i> إعادة محاولة
+            </button>
+        </section>
+
+        <!-- Success State - Invoice -->
+        <section id="successState" class="invoice-section" hidden>
+            <div class="invoice-wrapper">
+                
+                <!-- Invoice Header with QR Code -->
+                <div class="invoice-header-section">
+                    <div class="invoice-header-info">
+                        <div class="order-number-section">
+                            <h2 class="invoice-title">رقم الفاتورة</h2>
+                            <p class="order-number" id="orderNumber">-</p>
+                        </div>
+                        <div class="order-date-section">
+                            <h3 class="section-label">التاريخ</h3>
+                            <p class="order-date" id="orderDate">-</p>
+                        </div>
+                    </div>
+                    <div class="qr-code-section">
+                        <img id="qrCodeImg" src="" alt="QR Code" class="qr-code-img" loading="lazy">
+                        <p class="qr-label">امسح الرمز للعودة</p>
+                    </div>
+                </div>
+
+                <!-- Customer Information -->
+                <div class="invoice-content">
+                    <div class="info-grid">
+                        <!-- Customer Details -->
+                        <div class="info-box">
+                            <h3 class="box-title">بيانات العميل</h3>
+                            <div class="info-item">
+                                <span class="info-label">الاسم:</span>
+                                <span class="info-value" id="customerName">-</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">الهاتف:</span>
+                                <span class="info-value" id="customerPhone">-</span>
+                            </div>
+                        </div>
+
+                        <!-- Shipping Address -->
+                        <div class="info-box">
+                            <h3 class="box-title">عنوان التوصيل</h3>
+                            <div class="info-item">
+                                <span class="info-label">الحي:</span>
+                                <span class="info-value" id="shippingArea">-</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">الشارع:</span>
+                                <span class="info-value" id="shippingStreet">-</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">المبنى:</span>
+                                <span class="info-value" id="shippingBuilding">-</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">المدينة:</span>
+                                <span class="info-value" id="shippingCity">-</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">الدولة:</span>
+                                <span class="info-value" id="shippingCountry">-</span>
+                            </div>
+                        </div>
+
+                        <!-- Payment Information -->
+                        <div class="info-box">
+                            <h3 class="box-title">معلومات الدفع</h3>
+                            <div class="info-item">
+                                <span class="info-label">طريقة الدفع:</span>
+                                <span class="info-value" id="paymentMethod">-</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">الحالة:</span>
+                                <span class="info-value payment-status" id="paymentStatus">-</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Products Table -->
+                    <div class="products-section">
+                        <h3 class="section-title">المنتجات المطلوبة</h3>
+                        <div class="products-table-wrapper">
+                            <table class="products-table" id="productsTable">
+                                <thead>
+                                    <tr>
+                                        <th class="col-name">اسم المنتج</th>
+                                        <th class="col-quantity">الكمية</th>
+                                        <th class="col-price">السعر الواحد</th>
+                                        <th class="col-installation">سعر التركيب</th>
+                                        <th class="col-total">الإجمالي</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="productsTableBody">
+                                    <!-- Products will be inserted here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Summary Section -->
+                    <div class="summary-section">
+                        <div class="summary-box">
+                            <div class="summary-item">
+                                <span class="summary-label">المجموع الفرعي:</span>
+                                <span class="summary-value" id="subtotal">-</span>
+                            </div>
+                            <div class="summary-item">
+                                <span class="summary-label">تكاليف الشحن:</span>
+                                <span class="summary-value" id="shippingCost">-</span>
+                            </div>
+                            <div class="summary-item">
+                                <span class="summary-label">الضريبة:</span>
+                                <span class="summary-value" id="taxValue">-</span>
+                            </div>
+                            <div class="summary-item grand-total">
+                                <span class="summary-label">الإجمالي النهائي:</span>
+                                <span class="summary-value" id="grandTotal">-</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Delivery Status -->
+                    <div class="delivery-status-section">
+                        <h3 class="section-title">حالة الطلب</h3>
+                        <div class="delivery-status-box" id="deliveryStatusBox">
+                            <p id="deliveryStatus" class="delivery-status-text">-</p>
+                        </div>
+                    </div>
+
+                    <!-- Footer Message -->
+                    <div class="footer-message">
+                        <p>شكراً لتعاملكم معنا 🙏</p>
+                        <p class="contact-info">للاستفسارات والشكاوى، يرجى التواصل معنا عبر الهاتف أو البريد الإلكتروني</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Scripts -->
+    <script src="assets/js/config.js"></script>
+    <script src="assets/js/order-details.js"></script>
+
+</body>
+
+</html>

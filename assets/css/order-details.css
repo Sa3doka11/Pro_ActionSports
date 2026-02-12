@@ -1,0 +1,879 @@
+/* ===================================================================
+    ORDER-DETAILS.CSS - صفحة تفاصيل الفاتورة
+    ===================================================================
+    - تصميم احترافي لفاتورة الطلب
+    - دعم RTL (اللغة العربية)
+    - تحسين الطباعة
+    - استجابة الهاتف المحمول
+*/
+
+/* ===================================================================
+    1. GENERAL STYLES
+    =================================================================== */
+
+.order-details-container {
+    background-color: var(--bg-light);
+    min-height: 100vh;
+    padding: 20px 0;
+    font-family: 'Cairo', sans-serif;
+}
+
+/* ===================================================================
+    2. HEADER SECTION
+    =================================================================== */
+
+.order-header {
+    background-color: var(--bg-white);
+    border-bottom: 3px solid var(--primary-color);
+    padding: 20px;
+    margin-bottom: 30px;
+    box-shadow: var(--shadow-sm);
+}
+
+.order-header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.logo-section {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.logo-img {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.logo-text {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--text-color);
+    margin: 0;
+}
+
+.logo-text span {
+    color: var(--primary-color);
+}
+
+/* ===================================================================
+    3. PRINT BUTTON
+    =================================================================== */
+
+.print-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    font-family: 'Cairo', sans-serif;
+}
+
+.print-btn:hover {
+    background-color: var(--primary-color-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
+}
+
+.print-btn:active {
+    transform: translateY(0);
+}
+
+.print-btn i {
+    font-size: 18px;
+}
+
+@media (max-width: 768px) {
+    .order-header-content {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .print-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* ===================================================================
+    4. STATES (LOADING, ERROR, SUCCESS)
+    =================================================================== */
+
+.invoice-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    max-width: 600px;
+    margin: 60px auto;
+    padding: 40px;
+    text-align: center;
+}
+
+.state-icon {
+    font-size: 80px;
+    margin-bottom: 20px;
+    color: var(--primary-color);
+}
+
+.state-message {
+    font-size: 20px;
+    color: var(--text-color);
+    margin: 0 0 30px 0;
+    line-height: 1.6;
+}
+
+/* Loading State */
+.loading-state .state-icon {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Error State */
+.error-state .state-icon {
+    color: #e74c3c;
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.6;
+    }
+}
+
+.error-icon {
+    color: #e74c3c !important;
+}
+
+/* ===================================================================
+    5. RETRY BUTTON
+    =================================================================== */
+
+.retry-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 12px 28px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    font-family: 'Cairo', sans-serif;
+}
+
+.retry-btn:hover {
+    background-color: var(--primary-color-hover);
+    transform: translateY(-2px);
+}
+
+.retry-btn:active {
+    transform: translateY(0);
+}
+
+/* ===================================================================
+    6. INVOICE WRAPPER
+    =================================================================== */
+
+.invoice-section {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 0 20px 40px 20px;
+}
+
+.invoice-wrapper {
+    background-color: var(--bg-white);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+}
+
+/* ===================================================================
+    7. INVOICE HEADER WITH QR CODE
+    =================================================================== */
+
+.invoice-header-section {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    padding: 40px;
+    border-bottom: 2px dashed var(--border-color);
+    align-items: center;
+}
+
+.invoice-header-info {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.order-number-section,
+.order-date-section {
+    padding: 15px;
+    background-color: var(--bg-light);
+    border-radius: 8px;
+}
+
+.invoice-title,
+.section-label {
+    font-size: 12px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    margin: 0 0 8px 0;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.order-number,
+.order-date {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-color);
+    margin: 0;
+    direction: ltr;
+    text-align: left;
+}
+
+/* QR Code Section */
+.qr-code-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.qr-code-img {
+    width: 200px;
+    height: 200px;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    margin-bottom: 10px;
+    padding: 8px;
+    background-color: white;
+}
+
+.qr-label {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin: 0;
+}
+
+@media (max-width: 768px) {
+    .invoice-header-section {
+        grid-template-columns: 1fr;
+        gap: 20px;
+        padding: 25px;
+    }
+
+    .invoice-header-info {
+        grid-template-columns: 1fr;
+    }
+
+    .qr-code-img {
+        width: 150px;
+        height: 150px;
+    }
+}
+
+/* ===================================================================
+    8. INVOICE CONTENT
+    =================================================================== */
+
+.invoice-content {
+    padding: 40px;
+}
+
+/* ===================================================================
+    9. INFO GRID (CUSTOMER, ADDRESS, PAYMENT)
+    =================================================================== */
+
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 30px;
+    margin-bottom: 40px;
+}
+
+.info-box {
+    background-color: var(--bg-light);
+    padding: 25px;
+    border-radius: 8px;
+    border-right: 4px solid var(--primary-color);
+}
+
+.box-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-color);
+    margin: 0 0 20px 0;
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--primary-color);
+}
+
+.info-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.info-item:last-child {
+    border-bottom: none;
+}
+
+.info-label {
+    font-weight: 600;
+    color: var(--text-muted);
+    font-size: 14px;
+    flex: 0 0 40%;
+}
+
+.info-value {
+    color: var(--text-color);
+    font-size: 14px;
+    font-weight: 500;
+    text-align: right;
+    flex: 1;
+    word-break: break-word;
+}
+
+/* Payment Status styling */
+.payment-status {
+    font-weight: 700;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 13px;
+}
+
+.payment-status.paid {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.payment-status.pending {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+/* ===================================================================
+    10. PRODUCTS TABLE
+    =================================================================== */
+
+.products-section {
+    margin-bottom: 40px;
+}
+
+.section-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-color);
+    margin: 0 0 20px 0;
+    padding-bottom: 10px;
+    border-bottom: 3px solid var(--primary-color);
+}
+
+.products-table-wrapper {
+    overflow-x: auto;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+}
+
+.products-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+.products-table thead {
+    background-color: var(--bg-light);
+    border-bottom: 2px solid var(--border-color);
+}
+
+.products-table th {
+    padding: 15px 12px;
+    text-align: right;
+    font-weight: 700;
+    color: var(--text-color);
+    font-size: 13px;
+    text-transform: uppercase;
+}
+
+.products-table td {
+    padding: 15px 12px;
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-color);
+}
+
+.products-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.products-table tbody tr:hover {
+    background-color: var(--bg-light);
+}
+
+/* Column sizing */
+.col-name {
+    flex: 2;
+    width: 30%;
+}
+
+.col-quantity {
+    width: 10%;
+    text-align: center;
+}
+
+.col-price {
+    width: 15%;
+    text-align: left;
+    direction: ltr;
+}
+
+.col-installation {
+    width: 15%;
+    text-align: left;
+    direction: ltr;
+}
+
+.col-total {
+    width: 15%;
+    text-align: left;
+    direction: ltr;
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+.empty-message {
+    text-align: center;
+    color: var(--text-muted);
+    padding: 30px 12px !important;
+    font-style: italic;
+}
+
+@media (max-width: 768px) {
+    .products-table-wrapper {
+        border: none;
+    }
+
+    .products-table {
+        font-size: 12px;
+    }
+
+    .products-table th,
+    .products-table td {
+        padding: 10px 8px;
+    }
+
+    .col-name {
+        width: 40%;
+    }
+
+    .col-quantity {
+        width: 20%;
+    }
+
+    .col-price,
+    .col-installation,
+    .col-total {
+        width: 13%;
+        font-size: 11px;
+    }
+}
+
+/* ===================================================================
+    11. SUMMARY SECTION
+    =================================================================== */
+
+.summary-section {
+    margin-bottom: 40px;
+}
+
+.summary-box {
+    background: linear-gradient(135deg, var(--bg-light) 0%, rgba(231, 76, 60, 0.05) 100%);
+    padding: 30px;
+    border-radius: 8px;
+    border-left: 4px solid var(--primary-color);
+}
+
+.summary-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    font-size: 15px;
+}
+
+.summary-label {
+    color: var(--text-color);
+    font-weight: 600;
+}
+
+.summary-value {
+    color: var(--text-color);
+    font-weight: 500;
+    direction: ltr;
+    text-align: left;
+    min-width: 100px;
+    text-align: right;
+}
+
+.summary-item.grand-total {
+    padding: 16px 0;
+    margin-top: 12px;
+    padding-top: 16px;
+    border-top: 2px solid var(--border-color);
+    background-color: transparent;
+}
+
+.summary-item.grand-total .summary-label {
+    font-size: 18px;
+    color: var(--primary-color);
+}
+
+.summary-item.grand-total .summary-value {
+    font-size: 20px;
+    color: var(--primary-color);
+    font-weight: 700;
+}
+
+@media (max-width: 768px) {
+    .summary-box {
+        padding: 20px;
+    }
+
+    .summary-item {
+        font-size: 14px;
+    }
+
+    .summary-value {
+        min-width: 80px;
+    }
+}
+
+/* ===================================================================
+    12. DELIVERY STATUS SECTION
+    =================================================================== */
+
+.delivery-status-section {
+    margin-bottom: 40px;
+}
+
+.delivery-status-box {
+    background-color: #e3f2fd;
+    border-right: 4px solid #2196f3;
+    padding: 20px;
+    border-radius: 8px;
+}
+
+.delivery-status-text {
+    color: #1565c0;
+    font-weight: 600;
+    font-size: 15px;
+    margin: 0;
+}
+
+/* ===================================================================
+    13. FOOTER MESSAGE
+    =================================================================== */
+
+.footer-message {
+    background: linear-gradient(135deg, var(--primary-color) 0%, #c0392b 100%);
+    color: white;
+    padding: 30px;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.footer-message p {
+    margin: 0 0 15px 0;
+    font-size: 16px;
+    line-height: 1.6;
+}
+
+.footer-message p:first-child {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 20px;
+}
+
+.contact-info {
+    font-size: 13px;
+    opacity: 0.9;
+}
+
+/* ===================================================================
+    14. PRINT STYLES
+    =================================================================== */
+
+@media print {
+    /* إخفاء العناصر غير الضرورية للطباعة */
+    .order-header {
+        border-bottom-color: #000;
+    }
+
+    .print-btn {
+        display: none;
+    }
+
+    .order-details-container {
+        background-color: white;
+        padding: 0;
+    }
+
+    .invoice-section {
+        padding: 0;
+        margin: 0;
+    }
+
+    .invoice-wrapper {
+        box-shadow: none;
+        border-radius: 0;
+    }
+
+    /* تحسين الألوان للطباعة */
+    .info-box {
+        background-color: #f9f9f9;
+        border-right: 3px solid #000;
+        page-break-inside: avoid;
+    }
+
+    .summary-box {
+        background-color: #f9f9f9;
+        border-left: 3px solid #000;
+        page-break-inside: avoid;
+    }
+
+    .products-table th {
+        background-color: #e0e0e0;
+    }
+
+    .products-table tbody tr:hover {
+        background-color: white;
+    }
+
+    /* تحسين جودة النصوص */
+    body {
+        font-size: 12pt;
+        line-height: 1.4;
+    }
+
+    .section-title,
+    .box-title {
+        page-break-after: avoid;
+    }
+
+    /* منع كسر الجداول */
+    .products-table-wrapper {
+        page-break-inside: avoid;
+        border: 1px solid #000;
+    }
+
+    .invoice-header-section {
+        page-break-inside: avoid;
+    }
+
+    /* ضبط المقاسات للطباعة */
+    .logo-img {
+        width: 40px;
+        height: 40px;
+    }
+
+    .logo-text {
+        font-size: 20px;
+    }
+
+    .qr-code-img {
+        width: 120px;
+        height: 120px;
+    }
+
+    /* إزالة الظلال والتأثيرات */
+    * {
+        box-shadow: none !important;
+    }
+
+    /* لون الحدود للطباعة */
+    .invoice-section {
+        border: 1px solid #000;
+    }
+}
+
+/* ===================================================================
+    15. RESPONSIVE DESIGN
+    =================================================================== */
+
+@media (max-width: 768px) {
+    .order-details-container {
+        padding: 10px 0;
+    }
+
+    .order-header {
+        margin-bottom: 20px;
+        padding: 15px;
+    }
+
+    .order-header-content {
+        gap: 10px;
+    }
+
+    .invoice-content {
+        padding: 20px;
+    }
+
+    .invoice-header-section {
+        padding: 20px;
+        gap: 15px;
+    }
+
+    .info-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+
+    .info-box {
+        padding: 15px;
+    }
+
+    .products-section {
+        margin-bottom: 25px;
+    }
+
+    .summary-box {
+        padding: 15px;
+    }
+
+    .footer-message {
+        padding: 20px;
+    }
+
+    .footer-message p:first-child {
+        font-size: 18px;
+    }
+}
+
+@media (max-width: 480px) {
+    .invoice-state {
+        margin: 40px 20px;
+        padding: 30px 20px;
+    }
+
+    .state-icon {
+        font-size: 60px;
+        margin-bottom: 15px;
+    }
+
+    .state-message {
+        font-size: 16px;
+    }
+
+    .order-header-content {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .logo-section {
+        gap: 10px;
+    }
+
+    .logo-text {
+        font-size: 20px;
+    }
+
+    .print-btn {
+        width: 100%;
+    }
+
+    .invoice-header-section {
+        grid-template-columns: 1fr;
+    }
+
+    .invoice-header-info {
+        grid-template-columns: 1fr;
+    }
+
+    .info-item {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .info-label {
+        flex: 1;
+        margin-bottom: 5px;
+    }
+
+    .info-value {
+        text-align: right;
+    }
+
+    .products-table {
+        font-size: 11px;
+    }
+
+    .products-table th,
+    .products-table td {
+        padding: 8px 6px;
+    }
+
+    .summary-item {
+        font-size: 13px;
+    }
+
+    .summary-value {
+        min-width: 70px;
+    }
+}
+
+/* ===================================================================
+    16. DARK MODE SUPPORT
+    =================================================================== */
+
+[data-theme="dark"] .invoice-wrapper {
+    background-color: var(--bg-white);
+}
+
+[data-theme="dark"] .info-box,
+[data-theme="dark"] .summary-box {
+    background-color: var(--bg-light);
+}
+
+[data-theme="dark"] .products-table thead {
+    background-color: var(--bg-light);
+}
+
+[data-theme="dark"] .invoice-state {
+    background-color: transparent;
+}
+
+[data-theme="dark"] .products-table-wrapper {
+    border-color: var(--border-color);
+}
