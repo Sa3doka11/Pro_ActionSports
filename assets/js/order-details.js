@@ -21,7 +21,6 @@
     
     const API_BASE_URL = 'https://api.actionsports4u.com/api';
     const ORDER_SCAN_ENDPOINT = `${API_BASE_URL}/orders/scan`;
-    const QR_CODE_API = 'https://api.qrserver.com/v1/create-qr-code/';
     
     // DOM Elements Cache
     const DOM = {
@@ -31,39 +30,33 @@
         successState: document.getElementById('successState'),
         errorMessage: document.getElementById('errorMessage'),
         retryBtn: document.getElementById('retryBtn'),
-        printBtn: document.getElementById('print-btn'),
         
         // Order Info
         orderNumber: document.getElementById('orderNumber'),
         orderDate: document.getElementById('orderDate'),
+        paymentMethodHeader: document.getElementById('paymentMethodHeader'),
         
         // Customer Info
         customerName: document.getElementById('customerName'),
+        customerEmail: document.getElementById('customerEmail'),
         customerPhone: document.getElementById('customerPhone'),
         
         // Shipping Address
         shippingArea: document.getElementById('shippingArea'),
         shippingStreet: document.getElementById('shippingStreet'),
-        shippingBuilding: document.getElementById('shippingBuilding'),
-        shippingCity: document.getElementById('shippingCity'),
-        shippingCountry: document.getElementById('shippingCountry'),
+        shippingPostal: document.getElementById('shippingPostal'),
         
-        // Payment Info
-        paymentMethod: document.getElementById('paymentMethod'),
-        paymentStatus: document.getElementById('paymentStatus'),
+        // Payment
+        // (Removed - now displayed in header)
         
-        // Delivery Status
-        deliveryStatus: document.getElementById('deliveryStatus'),
+        // Products Table
+        productsTableBody: document.getElementById('productsTableBody'),
         
         // Summary
         subtotal: document.getElementById('subtotal'),
         shippingCost: document.getElementById('shippingCost'),
         taxValue: document.getElementById('taxValue'),
         grandTotal: document.getElementById('grandTotal'),
-        
-        // Products Table
-        productsTableBody: document.getElementById('productsTableBody'),
-        qrCodeImg: document.getElementById('qrCodeImg')
     };
 
     let currentOrderId = null;
@@ -77,6 +70,7 @@
      * يدعم الصيغ التالية:
      * - /order-details/{id}
      * - /order-details?id={id}
+     * - /order-details?{id}
      * @returns {string|null} - رقم الطلب أو null
      */
     function extractOrderId() {
@@ -88,9 +82,15 @@
 
         // حاول استخراج من معامل الاستعلام: ?id={id}
         const params = new URLSearchParams(window.location.search);
-        const id = params.get('id');
+        let id = params.get('id');
         if (id) {
             return id;
+        }
+
+        // حاول استخراج من query string مباشرة: ?{id}
+        const searchString = window.location.search.replace('?', '').trim();
+        if (searchString && searchString.length > 0) {
+            return searchString;
         }
 
         return null;
@@ -127,14 +127,7 @@
         return `${Number(amount).toFixed(2)} ر.س`;
     }
 
-    /**
-     * إنشء رابط QR Code
-     * @param {string} url - الرابط المراد تحويله لـ QR
-     * @returns {string} - رابط صورة QR Code
-     */
-    function generateQRCodeUrl(url) {
-        return `${QR_CODE_API}?size=200x200&data=${encodeURIComponent(url)}`;
-    }
+
 
     /**
      * إظهار حالة معينة وإخفاء الأخرى
@@ -171,88 +164,6 @@
 
         DOM.errorMessage.textContent = message;
         setState('error');
-    }
-
-    /**
-     * معالجة بيانات التوصيل
-     * @param {object} address - بيانات العنوان من API
-     * @returns {object} - بيانات منسقة
-     */
-    function processShippingAddress(address) {
-        if (!address) {
-            return {
-                area: '-',
-                street: '-',
-                building: '-',
-                city: '-',
-                country: '-'
-            };
-        }
-
-        return {
-            area: address.area || address.district || '-',
-            street: address.street || '-',
-            building: address.buildingNumber || address.building || '-',
-            city: address.city || '-',
-            country: address.country || '-'
-        };
-    }
-
-    /**
-     * معالجة حالة الطلب وتحويلها للعربية
-     * @param {string} status - حالة الطلب
-     * @returns {string} - الحالة بالعربية
-     */
-    function getDeliveryStatusArabic(status) {
-        const statusMap = {
-            'pending': 'قيد المراجعة',
-            'confirmed': 'تم تأكيد الطلب',
-            'processing': 'تحت المعالجة',
-            'shipped': 'تم الشحن',
-            'delivered': 'تم التسليم',
-            'cancelled': 'تم الإلغاء',
-            'returned': 'تم الإرجاع',
-            'waiting_for_payment': 'بانتظار الدفع'
-        };
-        return statusMap[status?.toLowerCase()] || status || '-';
-    }
-
-    /**
-     * معالجة طريقة الدفع وتحويلها للعربية
-     * @param {string} method - طريقة الدفع
-     * @returns {string} - طريقة الدفع بالعربية
-     */
-    function getPaymentMethodArabic(method) {
-        const methodMap = {
-            'credit_card': 'بطاقة ائتمان',
-            'debit_card': 'بطاقة خصم',
-            'cash': 'الدفع عند الاستلام',
-            'bank_transfer': 'تحويل بنكي',
-            'digital_wallet': 'محفظة رقمية',
-            'paytabs': 'PayTabs',
-            'tamara': 'تمارا',
-            'tabby': 'Tabby',
-            'invoice': 'على الحساب'
-        };
-        return methodMap[method?.toLowerCase()] || method || '-';
-    }
-
-    /**
-     * منسق حالة الدفع
-     * @param {boolean} isPaid - هل تم الدفع
-     * @returns {string} - حالة الدفع المنسقة
-     */
-    function getPaymentStatusDisplay(isPaid) {
-        return isPaid ? '✓ تم الدفع' : '⚠ قيد الانتظار';
-    }
-
-    /**
-     * إضافة أيقونة لحالة الدفع
-     * @param {boolean} isPaid - هل تم الدفع
-     * @returns {string} - CSS class لإضافة أيقونة
-     */
-    function getPaymentStatusClass(isPaid) {
-        return isPaid ? 'paid' : 'pending';
     }
 
     // ===================================================================
@@ -307,45 +218,53 @@
         DOM.orderNumber.textContent = data._id || data.id || '-';
         DOM.orderDate.textContent = formatDate(data.createdAt);
 
-        // بيانات العميل
-        const customer = data.shippingAddress || {};
-        DOM.customerName.textContent = customer.customerName || data.customerName || '-';
-        DOM.customerPhone.textContent = customer.phone || data.phone || '-';
+        // بيانات العميل من userId
+        const user = data.userId || {};
+        DOM.customerName.textContent = user.name || '-';
+        DOM.customerEmail.textContent = user.email || '-';
+        DOM.customerPhone.textContent = user.phone || '-';
 
         // عنوان التوصيل
-        const shippingAddress = processShippingAddress(customer);
-        DOM.shippingArea.textContent = shippingAddress.area;
-        DOM.shippingStreet.textContent = shippingAddress.street;
-        DOM.shippingBuilding.textContent = shippingAddress.building;
-        DOM.shippingCity.textContent = shippingAddress.city;
-        DOM.shippingCountry.textContent = shippingAddress.country;
+        const shipping = data.shippingAddress || {};
+        DOM.shippingStreet.textContent = shipping.details || '-';
+        DOM.shippingArea.textContent = shipping.city?.nameAr || '-';
+        DOM.shippingPostal.textContent = shipping.postalCode || '-';
 
         // معلومات الدفع
-        DOM.paymentMethod.textContent = getPaymentMethodArabic(data.paymentMethod);
-        const paymentStatusText = getPaymentStatusDisplay(data.isPaid);
-        const paymentStatusClass = getPaymentStatusClass(data.isPaid);
-        DOM.paymentStatus.textContent = paymentStatusText;
-        DOM.paymentStatus.className = `info-value payment-status ${paymentStatusClass}`;
-
-        // حالة الطلب
-        DOM.deliveryStatus.textContent = getDeliveryStatusArabic(data.deliveryStatus);
+        DOM.paymentMethodHeader.textContent = mapPaymentMethod(data.paymentMethod);
 
         // المبالغ المالية
         DOM.subtotal.textContent = formatCurrency(data.subTotalPrice);
         DOM.shippingCost.textContent = formatCurrency(data.shippingPrice);
-        DOM.taxValue.textContent = formatCurrency(data.taxPrice || 0);
+        // لا يوجد ضريبة، نعرض هنا إجمالي سعر التركيب بدلاً منها
+        DOM.taxValue.textContent = formatCurrency(data.totalInstallationPrice || 0);
         DOM.grandTotal.textContent = formatCurrency(data.totalOrderPrice);
 
         // المنتجات
         renderProducts(data.cartItems || []);
 
-        // QR Code
-        const currentUrl = window.location.href;
-        DOM.qrCodeImg.src = generateQRCodeUrl(currentUrl);
-        DOM.qrCodeImg.alt = `رمز الفاتورة ${data._id || data.id}`;
-
         // إظهار الفاتورة
         setState('success');
+    }
+
+    /**
+     * تحويل طريقة الدفع إلى نص عربي
+     * @param {string} method - طريقة الدفع
+     * @returns {string} - النص العربي
+     */
+    function mapPaymentMethod(method) {
+        const paymentMap = {
+            'cash': 'دفع عند الاستلام',
+            'credit_card': 'بطاقة ائتمان',
+            'debit_card': 'بطاقة خصم',
+            'bank_transfer': 'تحويل بنكي',
+            'digital_wallet': 'محفظة رقمية',
+            'paytabs': 'PayTabs',
+            'tamara': 'تمارة',
+            'tabby': 'تابي',
+            'invoice': 'فاتورة'
+        };
+        return paymentMap[method?.toLowerCase()] || method || '-';
     }
 
     /**
@@ -366,17 +285,21 @@
 
         items.forEach(item => {
             const row = document.createElement('tr');
-            const price = formatCurrency(item.priceAtPurchase || item.price || 0);
-            const installationPrice = formatCurrency(item.installationPrice || 0);
-            const quantity = item.quantity || 1;
-            const totalPrice = formatCurrency((item.priceAtPurchase || item.price || 0) * quantity + (item.installationPrice || 0));
+            const productName = item.productId?.name || item.name || '-';
+            const quantity = item.qty || 1;
+            const unitPrice = item.unitPrice || 0;
+            const installationPrice = item.installationPrice || 0;
+            
+            const price = formatCurrency(unitPrice);
+            const installPrice = formatCurrency(installationPrice);
+            const itemTotal = formatCurrency((unitPrice * quantity) + installationPrice);
 
             row.innerHTML = `
-                <td class="col-name">${item.productName || item.name || '-'}</td>
+                <td class="col-name">${productName}</td>
                 <td class="col-quantity">${quantity}</td>
                 <td class="col-price">${price}</td>
-                <td class="col-installation">${installationPrice}</td>
-                <td class="col-total">${totalPrice}</td>
+                <td class="col-installation">${installPrice}</td>
+                <td class="col-total">${itemTotal}</td>
             `;
             DOM.productsTableBody.appendChild(row);
         });
@@ -385,16 +308,6 @@
     // ===================================================================
     // EVENT HANDLERS
     // ===================================================================
-
-    /**
-     * معالج زر الطباعة
-     */
-    function handlePrint() {
-        // الانتظار قليلاً للتأكد من تحميل جميع الموارد
-        setTimeout(() => {
-            window.print();
-        }, 100);
-    }
 
     /**
      * معالج زر إعادة المحاولة
@@ -440,7 +353,6 @@
         }
 
         // إضافة مستمعي الأحداث
-        DOM.printBtn.addEventListener('click', handlePrint);
         DOM.retryBtn.addEventListener('click', handleRetry);
 
         // تحميل بيانات الطلب

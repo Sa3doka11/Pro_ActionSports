@@ -14,8 +14,12 @@
 .order-details-container {
     background-color: var(--bg-light);
     min-height: 100vh;
-    padding: 20px 0;
     font-family: 'Cairo', sans-serif;
+}
+
+/* Hide hidden attribute */
+[hidden] {
+    display: none !important;
 }
 
 /* ===================================================================
@@ -32,7 +36,7 @@
 
 .order-header-content {
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
     align-items: center;
     max-width: 1200px;
     margin: 0 auto;
@@ -222,8 +226,8 @@
     =================================================================== */
 
 .invoice-header-section {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
+    display: flex;
+    justify-content: space-between;
     gap: 30px;
     padding: 40px;
     border-bottom: 2px dashed var(--border-color);
@@ -232,13 +236,14 @@
 
 .invoice-header-info {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(3, 1fr);
     gap: 20px;
+    flex: 1;
 }
 
 .order-number-section,
 .order-date-section {
-    padding: 15px;
+    padding: 18px;
     background-color: var(--bg-light);
     border-radius: 8px;
 }
@@ -255,7 +260,7 @@
 
 .order-number,
 .order-date {
-    font-size: 18px;
+    font-size: 12px;
     font-weight: 700;
     color: var(--text-color);
     margin: 0;
@@ -289,7 +294,7 @@
 
 @media (max-width: 768px) {
     .invoice-header-section {
-        grid-template-columns: 1fr;
+        flex-direction: column;
         gap: 20px;
         padding: 25px;
     }
@@ -412,27 +417,31 @@
     width: 100%;
     border-collapse: collapse;
     font-size: 14px;
+    line-height: 1.6;
 }
 
 .products-table thead {
     background-color: var(--bg-light);
-    border-bottom: 2px solid var(--border-color);
+    border-bottom: 2px solid var(--primary);
 }
 
 .products-table th {
-    padding: 15px 12px;
+    padding: 18px 12px;
     text-align: right;
     font-weight: 700;
     color: var(--text-color);
     font-size: 13px;
     text-transform: uppercase;
+    vertical-align: middle;
+    text-align: center;
 }
 
 .products-table td {
-    padding: 15px 12px;
+    padding: 18px 12px;
     border-bottom: 1px solid var(--border-color);
     color: var(--text-color);
-}
+    text-align: center;
+    }
 
 .products-table tbody tr:last-child td {
     border-bottom: none;
@@ -444,33 +453,33 @@
 
 /* Column sizing */
 .col-name {
-    flex: 2;
     width: 30%;
+    text-align: right;
 }
 
 .col-quantity {
-    width: 10%;
+    width: 12%;
     text-align: center;
 }
 
 .col-price {
-    width: 15%;
+    width: 16%;
     text-align: left;
     direction: ltr;
 }
 
 .col-installation {
-    width: 15%;
-    text-align: left;
+    width: 16%;
+    text-align: center;
     direction: ltr;
 }
 
 .col-total {
-    width: 15%;
-    text-align: left;
+    width: 16%;
+    text-align: center;
     direction: ltr;
     font-weight: 700;
-    color: var(--primary-color);
+    color: var(--primary);
 }
 
 .empty-message {
@@ -853,27 +862,3 @@
     }
 }
 
-/* ===================================================================
-    16. DARK MODE SUPPORT
-    =================================================================== */
-
-[data-theme="dark"] .invoice-wrapper {
-    background-color: var(--bg-white);
-}
-
-[data-theme="dark"] .info-box,
-[data-theme="dark"] .summary-box {
-    background-color: var(--bg-light);
-}
-
-[data-theme="dark"] .products-table thead {
-    background-color: var(--bg-light);
-}
-
-[data-theme="dark"] .invoice-state {
-    background-color: transparent;
-}
-
-[data-theme="dark"] .products-table-wrapper {
-    border-color: var(--border-color);
-}

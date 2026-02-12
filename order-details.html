@@ -53,9 +53,6 @@
                     <img src="./assets/images/Logo.webp" alt="Action Sports Logo" class="logo-img">
                     <h1 class="logo-text">Action <span>Sports</span></h1>
                 </div>
-                <button id="print-btn" class="print-btn" title="طباعة الفاتورة" aria-label="طباعة الفاتورة">
-                    <i class="fas fa-print"></i> طباعة الفاتورة
-                </button>
             </div>
         </header>
 
@@ -82,21 +79,21 @@
         <section id="successState" class="invoice-section" hidden>
             <div class="invoice-wrapper">
                 
-                <!-- Invoice Header with QR Code -->
+                <!-- Invoice Header -->
                 <div class="invoice-header-section">
                     <div class="invoice-header-info">
                         <div class="order-number-section">
-                            <h2 class="invoice-title">رقم الفاتورة</h2>
+                            <h2 class="invoice-title">رقم الطلب:</h2>
                             <p class="order-number" id="orderNumber">-</p>
                         </div>
                         <div class="order-date-section">
-                            <h3 class="section-label">التاريخ</h3>
+                            <h3 class="section-label">التاريخ:</h3>
                             <p class="order-date" id="orderDate">-</p>
                         </div>
-                    </div>
-                    <div class="qr-code-section">
-                        <img id="qrCodeImg" src="" alt="QR Code" class="qr-code-img" loading="lazy">
-                        <p class="qr-label">امسح الرمز للعودة</p>
+                        <div class="order-date-section">
+                            <h3 class="section-label">طريقة الدفع:</h3>
+                            <p class="order-date" id="paymentMethodHeader">-</p>
+                        </div>
                     </div>
                 </div>
 
@@ -111,6 +108,10 @@
                                 <span class="info-value" id="customerName">-</span>
                             </div>
                             <div class="info-item">
+                                <span class="info-label">البريد الإلكتروني:</span>
+                                <span class="info-value" id="customerEmail">-</span>
+                            </div>
+                            <div class="info-item">
                                 <span class="info-label">الهاتف:</span>
                                 <span class="info-value" id="customerPhone">-</span>
                             </div>
@@ -120,7 +121,7 @@
                         <div class="info-box">
                             <h3 class="box-title">عنوان التوصيل</h3>
                             <div class="info-item">
-                                <span class="info-label">الحي:</span>
+                                <span class="info-label">المنطقة:</span>
                                 <span class="info-value" id="shippingArea">-</span>
                             </div>
                             <div class="info-item">
@@ -128,31 +129,12 @@
                                 <span class="info-value" id="shippingStreet">-</span>
                             </div>
                             <div class="info-item">
-                                <span class="info-label">المبنى:</span>
-                                <span class="info-value" id="shippingBuilding">-</span>
-                            </div>
-                            <div class="info-item">
-                                <span class="info-label">المدينة:</span>
-                                <span class="info-value" id="shippingCity">-</span>
-                            </div>
-                            <div class="info-item">
-                                <span class="info-label">الدولة:</span>
-                                <span class="info-value" id="shippingCountry">-</span>
+                                <span class="info-label">الرمز البريدي:</span>
+                                <span class="info-value" id="shippingPostal">-</span>
                             </div>
                         </div>
 
-                        <!-- Payment Information -->
-                        <div class="info-box">
-                            <h3 class="box-title">معلومات الدفع</h3>
-                            <div class="info-item">
-                                <span class="info-label">طريقة الدفع:</span>
-                                <span class="info-value" id="paymentMethod">-</span>
-                            </div>
-                            <div class="info-item">
-                                <span class="info-label">الحالة:</span>
-                                <span class="info-value payment-status" id="paymentStatus">-</span>
-                            </div>
-                        </div>
+
                     </div>
 
                     <!-- Products Table -->
@@ -188,7 +170,7 @@
                                 <span class="summary-value" id="shippingCost">-</span>
                             </div>
                             <div class="summary-item">
-                                <span class="summary-label">الضريبة:</span>
+                                <span class="summary-label">سعر التركيب:</span>
                                 <span class="summary-value" id="taxValue">-</span>
                             </div>
                             <div class="summary-item grand-total">
@@ -198,19 +180,7 @@
                         </div>
                     </div>
 
-                    <!-- Delivery Status -->
-                    <div class="delivery-status-section">
-                        <h3 class="section-title">حالة الطلب</h3>
-                        <div class="delivery-status-box" id="deliveryStatusBox">
-                            <p id="deliveryStatus" class="delivery-status-text">-</p>
-                        </div>
-                    </div>
 
-                    <!-- Footer Message -->
-                    <div class="footer-message">
-                        <p>شكراً لتعاملكم معنا 🙏</p>
-                        <p class="contact-info">للاستفسارات والشكاوى، يرجى التواصل معنا عبر الهاتف أو البريد الإلكتروني</p>
-                    </div>
                 </div>
             </div>
         </section>
