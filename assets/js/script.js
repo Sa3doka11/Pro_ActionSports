@@ -339,6 +339,28 @@ function setupHomepageBannerSlider(banners) {
     }
 }
 
+function showBannerEmptyState() {
+    const container = document.getElementById('homepageBanner');
+    const layout = container?.querySelector('.cta-banner-layout');
+    const emptyState = document.getElementById('bannerEmptyState');
+    const sliderControls = document.getElementById('homepageBannerSlider');
+
+    if (layout) layout.style.display = 'none';
+    if (sliderControls) sliderControls.style.display = 'none';
+    if (emptyState) emptyState.hidden = false;
+}
+
+function hideBannerEmptyState() {
+    const container = document.getElementById('homepageBanner');
+    const layout = container?.querySelector('.cta-banner-layout');
+    const emptyState = document.getElementById('bannerEmptyState');
+    const sliderControls = document.getElementById('homepageBannerSlider');
+
+    if (layout) layout.style.display = '';
+    if (sliderControls) sliderControls.style.display = '';
+    if (emptyState) emptyState.hidden = true;
+}
+
 async function loadHomepageBanner() {
     const container = document.getElementById('homepageBanner');
     if (!container) return;
@@ -354,10 +376,10 @@ async function loadHomepageBanner() {
                 ? response
                 : [];
 
-        // ✅ CRITICAL: Home page requires banner data
-        // If no banners returned, treat as server error
+        // If no banners returned, show empty state
         if (!Array.isArray(list) || list.length === 0) {
-            throw new Error('NO_BANNER_DATA');
+            showBannerEmptyState();
+            return;
         }
 
         const normalized = list
@@ -365,9 +387,11 @@ async function loadHomepageBanner() {
             .sort((a, b) => a.order - b.order);
 
         if (!normalized.length) {
-            throw new Error('NO_NORMALIZED_BANNERS');
+            showBannerEmptyState();
+            return;
         }
 
+        hideBannerEmptyState();
         homepageBannerState.banners = normalized;
         homepageBannerState.currentIndex = normalized.indexOf(pickHomepageBanner(normalized));
         if (homepageBannerState.currentIndex === -1) {
@@ -382,10 +406,8 @@ async function loadHomepageBanner() {
         const isAuthError = statusCode === 401 || statusCode === 403;
 
         if (!isAuthError) {
-            // ✅ For non-auth errors on critical data, show popup
-            if (typeof window.showServerErrorPopup === 'function') {
-                window.showServerErrorPopup();
-            }
+            // ✅ Don't show popup for banner errors - only for products/categories
+            console.error('Error loading homepage banner:', error);
         }
     }
 }
@@ -1579,11 +1601,18 @@ async function parseJsonSafely(response, retryHandler) {
 }
 
 // ✅ Page-level error handler (for critical API failures only)
-// Pages decide if data is critical and whether to show this popup
-function showServerErrorPopup() {
+// Show popup ONLY for products and categories endpoints
+function showServerErrorPopup(endpoint = '') {
+    // ✅ Only show popup for products or categories endpoints
+    const isCriticalEndpoint = endpoint.includes('products') || endpoint.includes('categories');
+    
+    if (!isCriticalEndpoint) {
+        // Not a critical endpoint - don't show popup
+        return;
+    }
+
     showGlobalErrorPopup(() => {
-        // Retry handler: let caller decide what to retry
-        // For now, just reload the page
+        // Just reload the page on retry
         location.reload();
     });
 }
@@ -1656,12 +1685,13 @@ async function ensureCookiesReady() {
 
     // Create a promise that resolves when cookies are ready
     cookiesReadyPromise = new Promise((resolve) => {
-        // Make a simple request to verify cookies work
-        // This will be fast after the first login, and only slow on true cold start
+        // ✅ Use a public endpoint (categories) instead of /me to verify cookies work
+        // This works for both guests and authenticated users
         const checkCookies = async () => {
             try {
+                const endpoint = window.API_CONFIG?.getEndpoint('CATEGORIES') || '/api/categories';
                 const response = await fetch(
-                    window.API_CONFIG?.getEndpoint('USER_ME'),
+                    `${endpoint}?page=1&limit=1`,
                     {
                         method: 'GET',
                         credentials: 'include',
@@ -1669,7 +1699,7 @@ async function ensureCookiesReady() {
                     }
                 );
                 // Don't care about result - we just want to know if cookies are working
-                // 200 = cookies ready, 401 = cookies ready but not auth, 5xx = server issue (still ready)
+                // 200 = cookies ready, 400+ = still working (cookies ready)
                 cookiesReady = true;
                 resolve(true);
             } catch (error) {
@@ -1688,6 +1718,14 @@ async function ensureCookiesReady() {
 // Attempt to refresh access token using refresh token (stored in httpOnly cookie)
 // ✅ Includes infinite loop prevention
 async function refreshAccessToken() {
+    // ✅ Skip refresh if no refresh token exists (guest user)
+    // Refresh tokens are httpOnly cookies, but we can detect absence via cookies
+    const hasRefreshToken = document.cookie.includes('refreshToken');
+    if (!hasRefreshToken) {
+        // Guest user - no token to refresh
+        return null;
+    }
+
     if (isRefreshing) {
         return refreshPromise;
     }
@@ -1695,6 +1733,7 @@ async function refreshAccessToken() {
     // Prevent infinite refresh loops
     if (refreshAttemptCount >= MAX_REFRESH_ATTEMPTS) {
         clearAuthUser();
+        guestUserConfirmed = true; // Mark as guest
         refreshAttemptCount = 0;
         throw new Error('Token refresh failed - max attempts exceeded');
     }
@@ -1768,7 +1807,12 @@ async function apiFetch(url, options = {}) {
     // If 401, try refresh (but NOT on /auth/token/refresh itself to avoid infinite loop)
     if (response.status === 401 && !url.includes('/auth/token/refresh') && cookiesReady) {
         try {
-            await refreshAccessToken();
+            // ✅ Skip if guest (refreshAccessToken returns null)
+            const refreshResult = await refreshAccessToken();
+            if (refreshResult === null) {
+                // Guest user - can't refresh
+                return response;
+            }
 
             // أعد محاولة الطلب بنفس الطريقة - لكن الآن مع التوكن الجديد في httpOnly cookie
             response = await fetch(url, requestOptions);
@@ -1847,7 +1891,12 @@ async function getJson(url) {
         // دعنا نحاول refresh ونعيد المحاولة
         if (response.status === 401 && url.includes('/orders/me')) {
             try {
-                await refreshAccessToken();
+                // ✅ Skip if guest (refreshAccessToken returns null)
+                const refreshResult = await refreshAccessToken();
+                if (refreshResult === null) {
+                    // Guest user - can't retry
+                    return null;
+                }
                 // أعد المحاولة مرة واحدة فقط
                 const retryResponse = await apiFetch(url, {
                     method: 'GET',
@@ -2378,6 +2427,7 @@ async function handleAccountVerification(otpCode) {
         } catch (profileError) {
             setAuthUser(extractAuthUser(result));
         }
+        guestUserConfirmed = false; // Reset flag - user is now authenticated
 
         if (otpForm) {
             otpForm.reset();
@@ -2482,6 +2532,9 @@ function extractAuthUser(payload) {
 }
 
 // تحميل بيانات المستخدم من الخادم عند توفر التوكن
+// Track if we've already attempted to load user and got 401 (guest user)
+let guestUserConfirmed = false;
+
 async function ensureAuthUserLoaded(forceRefresh = false) {
     const cachedUser = getAuthUser();
     // دائماً جلب من الـ API على الـ page load الأول لأن in-memory cache قد يكون فارغاً
@@ -2490,14 +2543,22 @@ async function ensureAuthUserLoaded(forceRefresh = false) {
         return cachedUser;
     }
 
+    // ✅ Skip /me fetch for guests (already confirmed by ensureCookiesReady or previous 401)
+    // This prevents unnecessary 401 errors for guest users
+    if (!forceRefresh && guestUserConfirmed) {
+        return null; // Guest user confirmed - don't try again
+    }
+
     try {
         const response = await getJson(USER_ENDPOINTS.me);
         if (!response) {
             // User not logged in (401)
+            guestUserConfirmed = true; // Mark as guest - don't try again
             return null;
         }
         const user = extractAuthUser(response);
         setAuthUser(user);
+        guestUserConfirmed = false; // User is authenticated
         // Trigger profile UI rendering on pages that need it
         if (typeof populateProfileFromAuthUser === 'function') {
             populateProfileFromAuthUser(user);
@@ -2506,6 +2567,7 @@ async function ensureAuthUserLoaded(forceRefresh = false) {
     } catch (error) {
         if (error.status === 401) {
             clearAuthUser();
+            guestUserConfirmed = true; // Mark as guest - don't try again
         }
         // Don't throw error on startup - user just not logged in
         return null;
@@ -2650,6 +2712,7 @@ async function handleLogout() {
 
     clearAuthUser();
     clearRedirectAfterLogin();
+    guestUserConfirmed = false; // Reset flag so user can login again
     if (typeof hidePopup === 'function') {
         hidePopup('login');
         hidePopup('signup');
@@ -2817,6 +2880,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 } catch (profileError) {
                     setAuthUser(extractAuthUser(result));
                 }
+                guestUserConfirmed = false; // Reset flag - user is now authenticated
 
                 // تحديث الكارت بعد الـ login
                 try {
@@ -2918,6 +2982,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 } catch (profileError) {
                     setAuthUser(extractAuthUser(result));
                 }
+                guestUserConfirmed = false; // Reset flag - user is now authenticated
 
                 signupForm.reset();
 
@@ -3867,6 +3932,11 @@ document.addEventListener('auth:user-updated', () => {
                 appendHomeCategories(categories);
             }
         } catch (error) {
+            // ✅ Show popup only for critical endpoints (products/categories)
+            if (typeof window.showServerErrorPopup === 'function') {
+                window.showServerErrorPopup(paginatedEndpoint);
+            }
+            
             if (page === 1) {
                 renderHomeCategories([]);
             } else {
@@ -4089,6 +4159,11 @@ document.addEventListener('auth:user-updated', () => {
             console.log('Fetched products:', products.length);
             renderLatestProducts(products);
         } catch (error) {
+            // ✅ Show popup only for critical endpoints (products/categories)
+            if (typeof window.showServerErrorPopup === 'function') {
+                window.showServerErrorPopup(endpoint);
+            }
+            
             console.error('Error fetching products:', error);
             renderLatestProducts([]);
         }

@@ -168,9 +168,9 @@
             const isAuthError = statusCode === 401 || statusCode === 403;
 
             if (!isAuthError) {
-                // ✅ For non-auth errors on critical data, show popup
+                // ✅ Show popup for product errors (products endpoint)
                 if (typeof window.showServerErrorPopup === 'function') {
-                    window.showServerErrorPopup();
+                    window.showServerErrorPopup('products');
                 }
             }
 
