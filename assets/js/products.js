@@ -22,6 +22,11 @@
     let isFetchingCategories = false;
     let productsLoaded = false;
 
+    // Pagination variables
+    let currentPage = 1;
+    let totalPages = 1;
+    let isLoading = false;
+
     const FALLBACK_IMAGE = 'assets/images/product1.png';
 
     const productMetadataCache = (() => {
@@ -194,6 +199,16 @@
             closeCartBtn.addEventListener('click', closeCart);
         }
 
+        // Load More button
+        const loadMoreBtn = document.getElementById('load-more-btn');
+        if (loadMoreBtn) {
+            loadMoreBtn.addEventListener('click', function() {
+                if (!isLoading && currentPage < totalPages) {
+                    loadProducts({ page: currentPage + 1, append: true });
+                }
+            });
+        }
+
         // Cart overlay
         const cartOverlay = document.querySelector('.cart-popup-overlay');
         if (cartOverlay) {
@@ -290,9 +305,10 @@
     }
 
     // Render products matching current category/search filters
-    function filterProducts() {
+    function filterProducts(append = false) {
         const grid = document.getElementById('productsGrid');
         const emptyState = document.getElementById('no-products-message');
+        const loadMoreContainer = document.getElementById('load-more-container');
 
         if (!grid) return;
 
@@ -308,7 +324,7 @@
             return matchesCategory && matchesSubCategory && matchesSearch && matchesPrice;
         }));
 
-        if (filteredProducts.length === 0) {
+        if (filteredProducts.length === 0 && !append) {
             safeSetHTML(grid, '');
             grid.classList.add('hidden');
             grid.setAttribute('aria-hidden', 'true');
@@ -320,6 +336,7 @@
                 safeSetHTML(emptyState, sanitizeHtmlContent(`<h3>لا توجد منتجات</h3><p>${message}</p>`));
                 emptyState.classList.remove('hidden');
             }
+            if (loadMoreContainer) loadMoreContainer.classList.add('hidden');
             return;
         }
 
@@ -359,7 +376,25 @@
             </div>
         `;
         }).join('');
-        safeSetHTML(grid, sanitizeHtmlContent(gridHtml));
+
+        if (append) {
+            const tempDiv = document.createElement('div');
+            safeSetHTML(tempDiv, sanitizeHtmlContent(gridHtml));
+            while (tempDiv.firstChild) {
+                grid.appendChild(tempDiv.firstChild);
+            }
+        } else {
+            safeSetHTML(grid, sanitizeHtmlContent(gridHtml));
+        }
+
+        // Handle Load More button visibility
+        if (loadMoreContainer) {
+            if (currentPage < totalPages) {
+                loadMoreContainer.classList.remove('hidden');
+            } else {
+                loadMoreContainer.classList.add('hidden');
+            }
+        }
     }
 
     /* ===================================================================
@@ -403,7 +438,6 @@
             if (cartTotalPrice) cartTotalPrice.textContent = '0 ﷼';
             return;
         }
-
 
         safeSetHTML(cartList, '');
 
@@ -653,31 +687,61 @@
     }
 
     async function loadProducts(params = {}) {
-        if (isFetchingProducts) return;
-        isFetchingProducts = true;
+        if (isFetchingProducts || isLoading) return;
+        
+        const isAppend = params.append || false;
+        const page = params.page || 1;
+        
+        if (!isAppend) {
+            isFetchingProducts = true;
+            currentPage = 1;
+            allProducts = [];
+        } else {
+            isLoading = true;
+        }
+
+        const loadMoreBtn = document.getElementById('load-more-btn');
+        if (loadMoreBtn && isAppend) {
+            loadMoreBtn.disabled = true;
+            loadMoreBtn.textContent = 'جاري التحميل...';
+        }
 
         try {
-            // ✅ استخدم getJson - تتعامل مع credentials: 'include'
-            const payload = await getJson(window.API_CONFIG.getEndpoint('PRODUCTS'));
+            const endpoint = window.API_CONFIG.getEndpoint('PRODUCTS');
+            const url = new URL(endpoint);
+            url.searchParams.set('page', page);
+            
+            const payload = await getJson(url.toString());
+            
             const products = Array.isArray(payload?.data?.products)
                 ? payload.data.products
                 : Array.isArray(payload?.data?.documents)
                     ? payload.data.documents
                     : [];
 
-            allProducts = products.map(product => {
+            currentPage = payload?.data?.currentPage || page;
+            totalPages = payload?.data?.totalPages || 1;
+
+            const newProducts = products.map(product => {
                 const normalizedProduct = normalizeProduct(product);
                 if (typeof window !== 'undefined' && typeof window.resolveProductImage === 'function') {
                     normalizedProduct.image = window.resolveProductImage(product);
                 }
                 return normalizedProduct;
             });
+
+            if (isAppend) {
+                allProducts = [...allProducts, ...newProducts];
+            } else {
+                allProducts = newProducts;
+            }
             
-            productsLoaded = true; // Mark products as successfully loaded
+            productsLoaded = true;
             
             buildCategoryFilters();
-            filterProducts();
-            allProducts.forEach(product => {
+            filterProducts(isAppend);
+            
+            newProducts.forEach(product => {
                 if (!product || !product.id) return;
                 productMetadataCache.set(product.id, {
                     name: product.name,
@@ -686,12 +750,20 @@
                 });
             });
         } catch (error) {
-            allProducts = [];
-            productsLoaded = true; // Mark as loaded even on error to show empty state
-            buildCategoryFilters();
-            filterProducts();
+            console.error('Error loading products:', error);
+            if (!isAppend) {
+                allProducts = [];
+                productsLoaded = true;
+                buildCategoryFilters();
+                filterProducts();
+            }
         } finally {
             isFetchingProducts = false;
+            isLoading = false;
+            if (loadMoreBtn) {
+                loadMoreBtn.disabled = false;
+                loadMoreBtn.textContent = 'عرض المزيد';
+            }
         }
     }
 
