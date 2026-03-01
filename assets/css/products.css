@@ -648,7 +648,7 @@ body {
     }
 
     .product-card .product-buttons {
-        flex-direction: row;
+        flex-direction: column;
         gap: 8px;
     }
 
@@ -1533,4 +1533,295 @@ body {
 [data-theme="dark"] .reset-filter-btn {
     background: rgba(231, 76, 60, 0.1);
     border-color: rgba(231, 76, 60, 0.2);
+}
+
+/* ===================================================================
+STICKY FILTER BAR - New Modern Design
+=================================================================== */
+
+.products-page {
+    position: relative;
+}
+
+.filter-bar {
+    position: sticky;
+    top: 0;
+    background: #fff;
+    z-index: 50;
+    display: flex;
+    gap: 12px;
+    padding: 12px 16px;
+    border-bottom: 1px solid #eee;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x mandatory;
+}
+
+.filter-bar::-webkit-scrollbar {
+    height: 4px;
+}
+
+.filter-bar::-webkit-scrollbar-track {
+    background: #f0f0f0;
+}
+
+.filter-bar::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 2px;
+}
+
+.filter-bar::-webkit-scrollbar-thumb:hover {
+    background: #999;
+}
+
+.filter-btn {
+    background: #f5f5f5;
+    border: none;
+    padding: 8px 14px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    font-family: 'Cairo', sans-serif;
+    font-size: 14px;
+    color: #232d39;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.filter-btn:hover {
+    background: #eaeaea;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.filter-btn.filter-toggle-btn {
+    position: relative;
+}
+
+.filter-btn .arrow {
+    font-size: 12px;
+    transition: transform 0.3s ease;
+}
+
+.filter-btn.filter-action-btn {
+    background: linear-gradient(135deg, var(--primary-color), #e55039);
+    color: #fff;
+}
+
+.filter-btn.filter-action-btn:hover {
+    background: linear-gradient(135deg, #d43f2b, #d23a27);
+    box-shadow: 0 6px 16px rgba(231, 76, 60, 0.3);
+}
+
+/* Category Dropdown */
+.filter-dropdown {
+    display: none;
+    position: relative;
+    background: #fff;
+    width: 100%;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+    padding: 16px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    border: 1px solid #f0f0f0;
+    z-index: 49;
+}
+
+.filter-dropdown.open {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 12px;
+}
+
+.filter-dropdown .filter-buttons {
+    display: contents;
+}
+
+/* Filter buttons inside dropdown */
+.filter-dropdown .filter-btn {
+    background: #f9f9f9;
+    border: 1px solid #e0e0e0;
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.filter-dropdown .filter-btn:hover {
+    background: #f0f0f0;
+    border-color: var(--primary-color);
+}
+
+.filter-dropdown .filter-btn.active {
+    background: var(--primary-color);
+    color: #fff;
+    border-color: var(--primary-color);
+}
+
+.filter-btn .filter-label {
+    display: block;
+    font-weight: 500;
+}
+
+.filter-btn .filter-meta {
+    font-size: 12px;
+    opacity: 0.7;
+    display: flex;
+    gap: 6px;
+}
+
+.filter-btn .filter-count {
+    background: rgba(231, 76, 60, 0.1);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+/* Subcategories styling */
+.sub-categories {
+    display: none;
+    grid-column: 1 / -1;
+    padding: 12px 0;
+    border-top: 1px solid #f0f0f0;
+    margin-top: 12px;
+}
+
+.sub-categories.show {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 10px;
+}
+
+.sub-filter-btn {
+    background: #f5f5f5;
+    border: 1px solid #e0e0e0;
+    padding: 8px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 500;
+    color: #666;
+    transition: all 0.2s ease;
+    text-align: center;
+    font-family: 'Cairo', sans-serif;
+}
+
+.sub-filter-btn:hover {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+.sub-filter-btn.active {
+    background: var(--primary-color);
+    color: #fff;
+    border-color: var(--primary-color);
+}
+
+/* Dark mode support */
+[data-theme="dark"] .filter-bar {
+    background: var(--bg-dark-secondary);
+    border-bottom-color: var(--border-color);
+}
+
+[data-theme="dark"] .filter-btn {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text-color);
+}
+
+[data-theme="dark"] .filter-btn:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+[data-theme="dark"] .filter-dropdown {
+    background: var(--bg-dark-secondary);
+    border-color: var(--border-color);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+[data-theme="dark"] .filter-dropdown .filter-btn {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.1);
+    color: var(--text-color);
+}
+
+[data-theme="dark"] .filter-dropdown .filter-btn:hover {
+    background: rgba(255, 255, 255, 0.12);
+    border-color: var(--primary-color);
+}
+
+[data-theme="dark"] .sub-filter-btn {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.1);
+    color: var(--text-color);
+}
+
+[data-theme="dark"] .sub-filter-btn:hover {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+[data-theme="dark"] .sub-categories {
+    border-top-color: var(--border-color);
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .filter-bar {
+        padding: 10px 12px;
+        gap: 10px;
+    }
+
+    .filter-btn {
+        padding: 7px 12px;
+        font-size: 13px;
+    }
+
+    .filter-dropdown {
+        padding: 12px;
+        margin-bottom: 16px;
+    }
+
+    .filter-dropdown.open {
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+        gap: 10px;
+    }
+
+    .sub-categories.show {
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    }
+}
+
+@media (max-width: 480px) {
+    .filter-bar {
+        padding: 8px 10px;
+        gap: 8px;
+    }
+
+    .filter-btn {
+        padding: 6px 10px;
+        font-size: 12px;
+    }
+
+    .filter-btn .arrow {
+        font-size: 10px;
+    }
+
+    .filter-dropdown.open {
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 8px;
+    }
+
+    .sub-categories.show {
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    }
 }

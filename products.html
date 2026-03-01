@@ -277,109 +277,125 @@
                         <button id="applyFilters" class="apply-filter-btn">تطبيق</button>
                     </div>
                 </div>
-                <!-- Filters Section -->
-                <div class="filters-section">
-                    <div class="filters-row">
-                        <div class="filter-group">
-                            <h3>تصفية حسب الفئة</h3>
-                            <div class="filter-buttons" id="categoryFilters">
-                                <button class="filter-btn active" data-category="all">الكل</button>
-                            </div>
+                <!-- NEW: Sticky Filter Bar -->
+                <div class="products-page">
+                    <div class="filter-bar">
+                        <button class="filter-btn filter-toggle-btn" id="categoryToggle">
+                            الفئات <span class="arrow">▼</span>
+                        </button>
+                        <button class="filter-btn filter-toggle-btn" id="priceToggle">
+                            السعر <span class="arrow">▼</span>
+                        </button>
+                        <button class="filter-btn filter-action-btn" data-sort="sold">
+                            الأكثر مبيعًا
+                        </button>
+                        <button class="filter-btn filter-toggle-btn" id="sortToggle">
+                            ترتيب <span class="arrow">▼</span>
+                        </button>
+                    </div>
+
+                    <!-- Category Dropdown Moved Here -->
+                    <div class="filter-dropdown" id="categoryDropdown">
+                        <div class="filter-buttons" id="categoryFilters">
+                            <button class="filter-btn active" data-category="all">الكل</button>
                         </div>
                     </div>
+
+                    <!-- Empty State Message -->
+                    <div id="no-products-message" class="no-products-message hidden">
+                        <div class="no-products-content">
+                            <h3>لا توجد منتجات</h3>
+                            <p>عذراً، لم نجد منتجات تطابق معايير البحث.</p>
+                        </div>
+                    </div>
+
+                    <!-- Products Grid -->
+                    <div class="products-grid product-list" id="productsGrid">
+                    <article class="product-card skeleton-card" aria-hidden="true">
+                        <div class="skeleton skeleton-thumb"></div>
+                        <div class="skeleton-stack">
+                            <span class="skeleton skeleton-chip"></span>
+                            <div class="skeleton skeleton-line"></div>
+                            <div class="skeleton skeleton-line short"></div>
+                            <div class="skeleton skeleton-price"></div>
+                        </div>
+                        <div class="skeleton-button-group">
+                            <span class="skeleton skeleton-button"></span>
+                            <span class="skeleton skeleton-button"></span>
+                        </div>
+                    </article>
+                    <article class="product-card skeleton-card" aria-hidden="true">
+                        <div class="skeleton skeleton-thumb"></div>
+                        <div class="skeleton-stack">
+                            <span class="skeleton skeleton-chip"></span>
+                            <div class="skeleton skeleton-line"></div>
+                            <div class="skeleton skeleton-line short"></div>
+                            <div class="skeleton skeleton-price"></div>
+                        </div>
+                        <div class="skeleton-button-group">
+                            <span class="skeleton skeleton-button"></span>
+                            <span class="skeleton skeleton-button"></span>
+                        </div>
+                    </article>
+                    <article class="product-card skeleton-card" aria-hidden="true">
+                        <div class="skeleton skeleton-thumb"></div>
+                        <div class="skeleton-stack">
+                            <span class="skeleton skeleton-chip"></span>
+                            <div class="skeleton skeleton-line"></div>
+                            <div class="skeleton skeleton-line short"></div>
+                            <div class="skeleton skeleton-price"></div>
+                        </div>
+                        <div class="skeleton-button-group">
+                            <span class="skeleton skeleton-button"></span>
+                            <span class="skeleton skeleton-button"></span>
+                        </div>
+                    </article>
+                    <article class="product-card skeleton-card" aria-hidden="true">
+                        <div class="skeleton skeleton-thumb"></div>
+                        <div class="skeleton-stack">
+                            <span class="skeleton skeleton-chip"></span>
+                            <div class="skeleton skeleton-line"></div>
+                            <div class="skeleton skeleton-line short"></div>
+                            <div class="skeleton skeleton-price"></div>
+                        </div>
+                        <div class="skeleton-button-group">
+                            <span class="skeleton skeleton-button"></span>
+                            <span class="skeleton skeleton-button"></span>
+                        </div>
+                    </article>
+                    <article class="product-card skeleton-card" aria-hidden="true">
+                        <div class="skeleton skeleton-thumb"></div>
+                        <div class="skeleton-stack">
+                            <span class="skeleton skeleton-chip"></span>
+                            <div class="skeleton skeleton-line"></div>
+                            <div class="skeleton skeleton-line short"></div>
+                            <div class="skeleton skeleton-price"></div>
+                        </div>
+                        <div class="skeleton-button-group">
+                            <span class="skeleton skeleton-button"></span>
+                            <span class="skeleton skeleton-button"></span>
+                        </div>
+                    </article>
+                    <article class="product-card skeleton-card" aria-hidden="true">
+                        <div class="skeleton skeleton-thumb"></div>
+                        <div class="skeleton-stack">
+                            <span class="skeleton skeleton-chip"></span>
+                            <div class="skeleton skeleton-line"></div>
+                            <div class="skeleton skeleton-line short"></div>
+                            <div class="skeleton skeleton-price"></div>
+                        </div>
+                        <div class="skeleton-button-group">
+                            <span class="skeleton skeleton-button"></span>
+                            <span class="skeleton skeleton-button"></span>
+                        </div>
+                    </article>
                 </div>
-                <!-- Empty State Message -->
-                <div id="no-products-message" class="no-products-message hidden">
-                    <div class="no-products-content">
-                        <h3>لا توجد منتجات</h3>
-                        <p>عذراً، لم نجد منتجات تطابق معايير البحث.</p>
+                    <!-- Load More Button -->
+                    <div id="load-more-container" class="load-more-container hidden">
+                        <button id="load-more-btn" class="main-button">عرض المزيد</button>
                     </div>
                 </div>
-                <!-- Products Grid -->
-                <div class="products-grid product-list" id="productsGrid">
-                    <article class="product-card skeleton-card" aria-hidden="true">
-                        <div class="skeleton skeleton-thumb"></div>
-                        <div class="skeleton-stack">
-                            <span class="skeleton skeleton-chip"></span>
-                            <div class="skeleton skeleton-line"></div>
-                            <div class="skeleton skeleton-line short"></div>
-                            <div class="skeleton skeleton-price"></div>
-                        </div>
-                        <div class="skeleton-button-group">
-                            <span class="skeleton skeleton-button"></span>
-                            <span class="skeleton skeleton-button"></span>
-                        </div>
-                    </article>
-                    <article class="product-card skeleton-card" aria-hidden="true">
-                        <div class="skeleton skeleton-thumb"></div>
-                        <div class="skeleton-stack">
-                            <span class="skeleton skeleton-chip"></span>
-                            <div class="skeleton skeleton-line"></div>
-                            <div class="skeleton skeleton-line short"></div>
-                            <div class="skeleton skeleton-price"></div>
-                        </div>
-                        <div class="skeleton-button-group">
-                            <span class="skeleton skeleton-button"></span>
-                            <span class="skeleton skeleton-button"></span>
-                        </div>
-                    </article>
-                    <article class="product-card skeleton-card" aria-hidden="true">
-                        <div class="skeleton skeleton-thumb"></div>
-                        <div class="skeleton-stack">
-                            <span class="skeleton skeleton-chip"></span>
-                            <div class="skeleton skeleton-line"></div>
-                            <div class="skeleton skeleton-line short"></div>
-                            <div class="skeleton skeleton-price"></div>
-                        </div>
-                        <div class="skeleton-button-group">
-                            <span class="skeleton skeleton-button"></span>
-                            <span class="skeleton skeleton-button"></span>
-                        </div>
-                    </article>
-                    <article class="product-card skeleton-card" aria-hidden="true">
-                        <div class="skeleton skeleton-thumb"></div>
-                        <div class="skeleton-stack">
-                            <span class="skeleton skeleton-chip"></span>
-                            <div class="skeleton skeleton-line"></div>
-                            <div class="skeleton skeleton-line short"></div>
-                            <div class="skeleton skeleton-price"></div>
-                        </div>
-                        <div class="skeleton-button-group">
-                            <span class="skeleton skeleton-button"></span>
-                            <span class="skeleton skeleton-button"></span>
-                        </div>
-                    </article>
-                    <article class="product-card skeleton-card" aria-hidden="true">
-                        <div class="skeleton skeleton-thumb"></div>
-                        <div class="skeleton-stack">
-                            <span class="skeleton skeleton-chip"></span>
-                            <div class="skeleton skeleton-line"></div>
-                            <div class="skeleton skeleton-line short"></div>
-                            <div class="skeleton skeleton-price"></div>
-                        </div>
-                        <div class="skeleton-button-group">
-                            <span class="skeleton skeleton-button"></span>
-                            <span class="skeleton skeleton-button"></span>
-                        </div>
-                    </article>
-                    <article class="product-card skeleton-card" aria-hidden="true">
-                        <div class="skeleton skeleton-thumb"></div>
-                        <div class="skeleton-stack">
-                            <span class="skeleton skeleton-chip"></span>
-                            <div class="skeleton skeleton-line"></div>
-                            <div class="skeleton skeleton-line short"></div>
-                            <div class="skeleton skeleton-price"></div>
-                        </div>
-                        <div class="skeleton-button-group">
-                            <span class="skeleton skeleton-button"></span>
-                            <span class="skeleton skeleton-button"></span>
-                        </div>
-                    </article>
-                </div>
-                <!-- Load More Button -->
-                <div id="load-more-container" class="load-more-container hidden">
-                    <button id="load-more-btn" class="main-button">عرض المزيد</button>
-                </div>
+                <!-- END: products-page div -->
             </div>
         </section>
         <!-- ***** Products Page Section End ***** -->

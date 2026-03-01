@@ -8,6 +8,8 @@
     "use strict";
 
     let allProducts = [];
+    let filteredProducts = [];
+    let visibleProducts = [];
     let categoriesFromApi = [];
     let categoryHierarchy = new Map();
     let currentCategory = 'all';
@@ -22,10 +24,13 @@
     let isFetchingCategories = false;
     let productsLoaded = false;
 
-    // Pagination variables
+    // Infinite scroll & pagination variables
+    let currentIndex = 0;
+    const PAGE_SIZE = 10;
     let currentPage = 1;
     let totalPages = 1;
     let isLoading = false;
+    let allProductsLoaded = false;
 
     const FALLBACK_IMAGE = 'assets/images/product1.png';
 
@@ -106,12 +111,12 @@
             renderCart();
         }
     });
-
-    /* ===================================================================
-    2. Setup Event Listeners
-    =================================================================== */
+    // Setup Event Listeners
     // Prepare UI event handlers for filters, search, and cart overlay
     function setupEventListeners() {
+        // Create scroll arrow indicator
+        createScrollArrowIndicator();
+
         const filtersContainer = document.getElementById('categoryFilters');
 
         if (filtersContainer) {
@@ -199,15 +204,8 @@
             closeCartBtn.addEventListener('click', closeCart);
         }
 
-        // Load More button
-        const loadMoreBtn = document.getElementById('load-more-btn');
-        if (loadMoreBtn) {
-            loadMoreBtn.addEventListener('click', function() {
-                if (!isLoading && currentPage < totalPages) {
-                    loadProducts({ page: currentPage + 1, append: true });
-                }
-            });
-        }
+        // Infinite scroll listener (replaces Load More button)
+        window.addEventListener('scroll', handleInfiniteScroll);
 
         // Cart overlay
         const cartOverlay = document.querySelector('.cart-popup-overlay');
@@ -274,10 +272,158 @@
                 closePopup();
             });
         }
+
+        // ===================================================================
+        // STICKY FILTER BAR - Dropdown Toggle Handlers
+        // ===================================================================
+        
+        // Category dropdown toggle
+        const categoryToggle = document.getElementById('categoryToggle');
+        const categoryDropdown = document.getElementById('categoryDropdown');
+        
+        if (categoryToggle) {
+            categoryToggle.addEventListener('click', function(e) {
+                e.stopPropagation();
+                if (categoryDropdown) {
+                    categoryDropdown.classList.toggle('open');
+                    // Close other dropdowns
+                    if (priceDropdown) priceDropdown.classList.remove('open');
+                    if (sortDropdown) sortDropdown.classList.remove('open');
+                }
+            });
+        }
+
+        // Price toggle (for future enhancement)
+        const priceToggle = document.getElementById('priceToggle');
+        const priceDropdown = document.getElementById('priceDropdown');
+        
+        if (priceToggle) {
+            priceToggle.addEventListener('click', function(e) {
+                e.stopPropagation();
+                if (filterBtn) {
+                    filterBtn.click(); // Open the existing filter/sort popup
+                    if (categoryDropdown) categoryDropdown.classList.remove('open');
+                    if (sortDropdown) sortDropdown.classList.remove('open');
+                }
+            });
+        }
+
+        // Sort toggle (for future enhancement)
+        const sortToggle = document.getElementById('sortToggle');
+        const sortDropdown = document.getElementById('sortDropdown');
+        
+        if (sortToggle) {
+            sortToggle.addEventListener('click', function(e) {
+                e.stopPropagation();
+                if (filterBtn) {
+                    filterBtn.click(); // Open the existing filter/sort popup
+                    if (categoryDropdown) categoryDropdown.classList.remove('open');
+                    if (priceDropdown) priceDropdown.classList.remove('open');
+                }
+            });
+        }
+
+        // Best selling action button
+        const bestSellingBtn = document.querySelector('[data-sort="sold"]');
+        if (bestSellingBtn) {
+            bestSellingBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                currentSortBy = 'best-selling';
+                filterProducts();
+                if (categoryDropdown) categoryDropdown.classList.remove('open');
+                if (priceDropdown && priceDropdown) priceDropdown.classList.remove('open');
+                if (sortDropdown && sortDropdown) sortDropdown.classList.remove('open');
+            });
+        }
+
+        // Close dropdowns when clicking outside
+        document.addEventListener('click', function(event) {
+            if (categoryToggle && !categoryToggle.contains(event.target) && categoryDropdown && !categoryDropdown.contains(event.target)) {
+                categoryDropdown.classList.remove('open');
+            }
+        });
     }
 
     /* ===================================================================
-    3. Filter and Render Products
+    3. Infinite Scroll Handler
+    =================================================================== */
+    function handleInfiniteScroll() {
+        if (isLoading || currentIndex >= filteredProducts.length) {
+            return;
+        }
+
+        const scrollPosition = window.innerHeight + window.scrollY;
+        const bottomThreshold = document.body.scrollHeight - 500;
+
+        if (scrollPosition >= bottomThreshold) {
+            appendMoreProducts();
+        }
+    }
+
+    // Append next batch of products to visible list
+    function appendMoreProducts() {
+        if (isLoading || currentIndex >= filteredProducts.length) {
+            return;
+        }
+
+        isLoading = true;
+        const nextIndex = currentIndex + PAGE_SIZE;
+        const newProducts = filteredProducts.slice(currentIndex, nextIndex);
+
+        if (newProducts.length > 0) {
+            renderProductsAppend(newProducts);
+            currentIndex = nextIndex;
+            updateScrollArrowVisibility();
+        }
+
+        isLoading = false;
+    }
+
+    // Render products by appending to grid
+    function renderProductsAppend(products) {
+        const grid = document.getElementById('productsGrid');
+        if (!grid) return;
+
+        const gridHtml = products.map(product => {
+            const hasDiscount = Number.isFinite(product.originalPrice) && product.originalPrice > 0
+                && Number.isFinite(product.discountPrice) && product.discountPrice > 0
+                && product.discountPrice < product.originalPrice;
+            const priceMarkup = hasDiscount
+                ? `<span class="old-price">${formatPrice(product.originalPrice)}</span><span class="current-price">${formatPrice(product.price)}</span>`
+                : `<span class="current-price">${formatPrice(product.price)}</span>`;
+            const originalPriceAttr = product.originalPrice != null ? product.originalPrice : '';
+            const discountPriceAttr = product.discountPrice != null ? product.discountPrice : '';
+
+            return `
+            <div class="product-item product-card" data-id="${sanitizeHtmlContent(product.id)}" data-name="${sanitizeHtmlContent(product.name)}" data-price="${product.price}" data-original-price="${originalPriceAttr}" data-discount-price="${discountPriceAttr}" data-image="${sanitizeHtmlContent(product.image)}" data-category="${sanitizeHtmlContent(product.categorySlug)}">
+                <div class="image-thumb">
+                    <img src="${sanitizeHtmlContent(product.image)}" alt="${sanitizeHtmlContent(product.name)}" loading="lazy">
+                </div>
+                <div class="down-content">
+                    <span>${sanitizeHtmlContent(product.categoryName)}</span>
+                    <div class="product-heading">
+                        <h4>${sanitizeHtmlContent(product.name)}</h4>
+                    </div>
+                    <p class="product-description">${sanitizeHtmlContent(product.description)}</p>
+                    <p class="product-price">${priceMarkup} <img src="./assets/images/Saudi_Riyal_Symbol.png" alt="" aria-hidden="true" class="saudi-riyal-symbol" /></p>
+                    <div class="product-buttons">
+                        <a href="productDetails.html?id=${sanitizeHtmlContent(product.id)}" class="secondary-button">عرض المنتج</a>
+                        <a href="#" class="add-to-cart-btn secondary-button" data-id="${sanitizeHtmlContent(product.id)}">أضف للسلة</a>
+                    </div>
+                </div>
+            </div>
+        `;
+        }).join('');
+
+        const tempDiv = document.createElement('div');
+        safeSetHTML(tempDiv, sanitizeHtmlContent(gridHtml));
+        while (tempDiv.firstChild) {
+            grid.appendChild(tempDiv.firstChild);
+        }
+    }
+
+    /* ===================================================================
+    4. Filter and Render Products
     =================================================================== */
     function applySorting(products) {
         if (currentSortBy === 'price-low-high') {
@@ -304,6 +450,75 @@
         return products;
     }
 
+    // Create scroll arrow indicator element
+    function createScrollArrowIndicator() {
+        let scrollArrow = document.getElementById('scroll-arrow-indicator');
+        if (scrollArrow) return; // Already created
+
+        scrollArrow = document.createElement('div');
+        scrollArrow.id = 'scroll-arrow-indicator';
+        scrollArrow.innerHTML = `
+            <style>
+                #scroll-arrow-indicator {
+                    display: none;
+                    text-align: center;
+                    padding: 30px 0;
+                    animation: bounceDown 1.5s infinite;
+                }
+                #scroll-arrow-indicator.show {
+                    display: block;
+                }
+                #scroll-arrow-indicator .arrow-icon {
+                    font-size: 32px;
+                    color: #ff6b6b;
+                    animation: fadeInOut 1.5s infinite;
+                }
+                @keyframes bounceDown {
+                    0%, 20%, 50%, 80%, 100% {
+                        transform: translateY(0);
+                    }
+                    40% {
+                        transform: translateY(10px);
+                    }
+                    60% {
+                        transform: translateY(5px);
+                    }
+                }
+                @keyframes fadeInOut {
+                    0%, 20%, 50%, 80%, 100% {
+                        opacity: 1;
+                    }
+                    40%, 60% {
+                        opacity: 0.6;
+                    }
+                }
+            </style>
+            <div class="arrow-icon">
+                <i class="fa-solid fa-chevron-down"></i>
+            </div>
+        `;
+        
+        const section = document.querySelector('section.products-section') 
+            || document.querySelector('[class*="product"]')
+            || document.body;
+        section.appendChild(scrollArrow);
+    }
+
+    // Update scroll arrow visibility
+    function updateScrollArrowVisibility() {
+        const scrollArrow = document.getElementById('scroll-arrow-indicator');
+        if (!scrollArrow) return;
+
+        // Show arrow if there are more products to load
+        const hasMoreProducts = currentIndex < filteredProducts.length;
+        
+        if (hasMoreProducts) {
+            scrollArrow.classList.add('show');
+        } else {
+            scrollArrow.classList.remove('show');
+        }
+    }
+
     // Render products matching current category/search filters
     function filterProducts(append = false) {
         const grid = document.getElementById('productsGrid');
@@ -312,7 +527,8 @@
 
         if (!grid) return;
 
-        const filteredProducts = applySorting(allProducts.filter(product => {
+        // Filter from allProducts
+        filteredProducts = applySorting(allProducts.filter(product => {
             const matchesCategory = matchesAnyFilter([currentCategory, currentCategoryId], product.categorySlug, product.categoryId, product.categoryName);
             const matchesSubCategory = matchesAnyFilter([currentSubCategory], product.subCategorySlug, product.subCategoryId, product.subCategoryName);
             const matchesSearch = !searchQuery ||
@@ -324,29 +540,68 @@
             return matchesCategory && matchesSubCategory && matchesSearch && matchesPrice;
         }));
 
-        if (filteredProducts.length === 0 && !append) {
-            safeSetHTML(grid, '');
-            grid.classList.add('hidden');
-            grid.setAttribute('aria-hidden', 'true');
-            if (emptyState) {
-                let message = 'عذراً، لم نجد منتجات تطابق معايير البحث.';
-                if (minPriceFilter > 0 || maxPriceFilter !== Infinity) {
-                    message = `عذراً، لم نجد منتجات بالأسعار المختارة (${formatPrice(minPriceFilter)} - ${formatPrice(maxPriceFilter)} ﷼).`;
+        // Reset for new filter
+        if (!append) {
+            currentIndex = 0;
+            visibleProducts = [];
+
+            if (filteredProducts.length === 0) {
+                safeSetHTML(grid, '');
+                grid.classList.add('hidden');
+                grid.setAttribute('aria-hidden', 'true');
+                if (emptyState) {
+                    let message = '';
+                    
+                    // Determine the reason for no products
+                    if (searchQuery) {
+                        // Search query active
+                        message = 'عذراً، لم نجد منتجات تطابق معايير البحث.';
+                    } else if (minPriceFilter > 0 || maxPriceFilter !== Infinity) {
+                        // Price filter active
+                        message = `عذراً، لم نجد منتجات بالأسعار المختارة (${formatPrice(minPriceFilter)} - ${formatPrice(maxPriceFilter)} ﷼).`;
+                    } else if (currentSubCategory !== 'all' && normalizeFilterValue(currentSubCategory) !== '') {
+                        // Subcategory filter active
+                        message = 'لا توجد منتجات في هذا القسم الفرعي.';
+                    } else if (currentCategory !== 'all' && normalizeFilterValue(currentCategory) !== '') {
+                        // Category filter active
+                        message = 'لا توجد منتجات في هذه الفئة.';
+                    } else {
+                        // Default (shouldn't happen since we have "All" category)
+                        message = 'عذراً، لم نجد منتجات.';
+                    }
+                    
+                    safeSetHTML(emptyState, sanitizeHtmlContent(`<h3>لا توجد منتجات</h3><p>${message}</p>`));
+                    emptyState.classList.remove('hidden');
                 }
-                safeSetHTML(emptyState, sanitizeHtmlContent(`<h3>لا توجد منتجات</h3><p>${message}</p>`));
-                emptyState.classList.remove('hidden');
+                if (loadMoreContainer) loadMoreContainer.classList.add('hidden');
+                updateScrollArrowVisibility(); // Hide arrow when no products
+                return;
             }
+
+            grid.classList.remove('hidden');
+            grid.removeAttribute('aria-hidden');
+            if (emptyState) {
+                emptyState.classList.add('hidden');
+            }
+
+            // Render first PAGE_SIZE products
+            const initialProducts = filteredProducts.slice(0, PAGE_SIZE);
+            visibleProducts = initialProducts;
+            currentIndex = PAGE_SIZE;
+            renderProductsInitial(initialProducts);
+            updateScrollArrowVisibility();
+            
+            // Hide Load More container - we use infinite scroll now
             if (loadMoreContainer) loadMoreContainer.classList.add('hidden');
-            return;
         }
+    }
 
-        grid.classList.remove('hidden');
-        grid.removeAttribute('aria-hidden');
-        if (emptyState) {
-            emptyState.classList.add('hidden');
-        }
+    // Render products for initial filter (replaces all content)
+    function renderProductsInitial(products) {
+        const grid = document.getElementById('productsGrid');
+        if (!grid) return;
 
-        const gridHtml = filteredProducts.map(product => {
+        const gridHtml = products.map(product => {
             const hasDiscount = Number.isFinite(product.originalPrice) && product.originalPrice > 0
                 && Number.isFinite(product.discountPrice) && product.discountPrice > 0
                 && product.discountPrice < product.originalPrice;
@@ -359,7 +614,7 @@
             return `
             <div class="product-item product-card" data-id="${sanitizeHtmlContent(product.id)}" data-name="${sanitizeHtmlContent(product.name)}" data-price="${product.price}" data-original-price="${originalPriceAttr}" data-discount-price="${discountPriceAttr}" data-image="${sanitizeHtmlContent(product.image)}" data-category="${sanitizeHtmlContent(product.categorySlug)}">
                 <div class="image-thumb">
-                    <img src="${sanitizeHtmlContent(product.image)}" alt="${sanitizeHtmlContent(product.name)}">
+                    <img src="${sanitizeHtmlContent(product.image)}" alt="${sanitizeHtmlContent(product.name)}" loading="lazy">
                 </div>
                 <div class="down-content">
                     <span>${sanitizeHtmlContent(product.categoryName)}</span>
@@ -377,28 +632,11 @@
         `;
         }).join('');
 
-        if (append) {
-            const tempDiv = document.createElement('div');
-            safeSetHTML(tempDiv, sanitizeHtmlContent(gridHtml));
-            while (tempDiv.firstChild) {
-                grid.appendChild(tempDiv.firstChild);
-            }
-        } else {
-            safeSetHTML(grid, sanitizeHtmlContent(gridHtml));
-        }
-
-        // Handle Load More button visibility
-        if (loadMoreContainer) {
-            if (currentPage < totalPages) {
-                loadMoreContainer.classList.remove('hidden');
-            } else {
-                loadMoreContainer.classList.add('hidden');
-            }
-        }
+        safeSetHTML(grid, sanitizeHtmlContent(gridHtml));
     }
 
     /* ===================================================================
-    4. Cart Functions
+    5. Cart Functions
     =================================================================== */
     // Persist selected product into session cart storage
     async function addToCart(product) {
@@ -687,83 +925,79 @@
     }
 
     async function loadProducts(params = {}) {
-        if (isFetchingProducts || isLoading) return;
+        if (isFetchingProducts) return;
         
-        const isAppend = params.append || false;
-        const page = params.page || 1;
-        
-        if (!isAppend) {
-            isFetchingProducts = true;
-            currentPage = 1;
-            allProducts = [];
-        } else {
-            isLoading = true;
-        }
-
-        const loadMoreBtn = document.getElementById('load-more-btn');
-        if (loadMoreBtn && isAppend) {
-            loadMoreBtn.disabled = true;
-            loadMoreBtn.textContent = 'جاري التحميل...';
-        }
+        isFetchingProducts = true;
+        allProducts = [];
+        allProductsLoaded = false;
 
         try {
             const endpoint = window.API_CONFIG.getEndpoint('PRODUCTS');
-            const url = new URL(endpoint);
-            url.searchParams.set('page', page);
-            
-            const payload = await getJson(url.toString());
-            
-            const products = Array.isArray(payload?.data?.products)
-                ? payload.data.products
-                : Array.isArray(payload?.data?.documents)
-                    ? payload.data.documents
-                    : [];
+            let pageNum = 1;
+            let hasMore = true;
 
-            currentPage = payload?.data?.currentPage || page;
-            totalPages = payload?.data?.totalPages || 1;
+            // Load all products by looping through pages
+            while (hasMore) {
+                const url = new URL(endpoint);
+                url.searchParams.set('page', pageNum);
+                url.searchParams.set('limit', '100'); // Larger page size for efficiency
+                
+                const payload = await getJson(url.toString());
+                
+                const products = Array.isArray(payload?.data?.products)
+                    ? payload.data.products
+                    : Array.isArray(payload?.data?.documents)
+                        ? payload.data.documents
+                        : [];
 
-            const newProducts = products.map(product => {
-                const normalizedProduct = normalizeProduct(product);
-                if (typeof window !== 'undefined' && typeof window.resolveProductImage === 'function') {
-                    normalizedProduct.image = window.resolveProductImage(product);
+                if (products.length === 0) {
+                    hasMore = false;
+                    break;
                 }
-                return normalizedProduct;
-            });
 
-            if (isAppend) {
+                const newProducts = products.map(product => {
+                    const normalizedProduct = normalizeProduct(product);
+                    if (typeof window !== 'undefined' && typeof window.resolveProductImage === 'function') {
+                        normalizedProduct.image = window.resolveProductImage(product);
+                    }
+                    return normalizedProduct;
+                });
+
                 allProducts = [...allProducts, ...newProducts];
-            } else {
-                allProducts = newProducts;
+                
+                newProducts.forEach(product => {
+                    if (!product || !product.id) return;
+                    productMetadataCache.set(product.id, {
+                        name: product.name,
+                        price: product.price,
+                        image: product.image
+                    });
+                });
+
+                pageNum++;
+                
+                // Check if we have more pages
+                const totalPages = payload?.data?.totalPages || pageNum;
+                if (pageNum > totalPages) {
+                    hasMore = false;
+                }
             }
             
+            allProductsLoaded = true;
             productsLoaded = true;
             
             buildCategoryFilters();
-            filterProducts(isAppend);
+            filterProducts();
             
-            newProducts.forEach(product => {
-                if (!product || !product.id) return;
-                productMetadataCache.set(product.id, {
-                    name: product.name,
-                    price: product.price,
-                    image: product.image
-                });
-            });
         } catch (error) {
             console.error('Error loading products:', error);
-            if (!isAppend) {
-                allProducts = [];
-                productsLoaded = true;
-                buildCategoryFilters();
-                filterProducts();
-            }
+            allProducts = [];
+            allProductsLoaded = true;
+            productsLoaded = true;
+            buildCategoryFilters();
+            filterProducts();
         } finally {
             isFetchingProducts = false;
-            isLoading = false;
-            if (loadMoreBtn) {
-                loadMoreBtn.disabled = false;
-                loadMoreBtn.textContent = 'عرض المزيد';
-            }
         }
     }
 
@@ -859,98 +1093,146 @@
         const filtersContainer = document.getElementById('categoryFilters');
         if (!filtersContainer) return;
 
-        const apiCategoryLookup = new Map();
+        // ===================================================================
+        // STEP 1: Build API category lookup by ID (primary key)
+        // ===================================================================
+        const apiCategoryById = new Map();
+        const apiCategoryBySlug = new Map();
+        
         categoriesFromApi.forEach(category => {
-            if (!category) return;
-            const key = normalizeFilterValue(category.slug || category.id || category.name);
-            if (!key || apiCategoryLookup.has(key)) return;
-            apiCategoryLookup.set(key, category);
+            if (!category || !category.id) return;
+            apiCategoryById.set(category.id, category);
+            if (category.slug) {
+                apiCategoryBySlug.set(normalizeFilterValue(category.slug), category);
+            }
         });
 
-        const categoriesMap = new Map();
+        // ===================================================================
+        // STEP 2: Build the category hierarchy using category IDs as keys
+        // ===================================================================
+        const categoriesMap = new Map(); // key: categoryId, value: category object
 
-        const ensureCategoryEntry = (slugKey, data = {}) => {
-            const normalizedKey = normalizeFilterValue(slugKey || data.slug || data.id || data.name);
-            if (!normalizedKey) return null;
+        // First, add all API categories to the map
+        apiCategoryById.forEach(apiCategory => {
+            if (!apiCategory.id) return;
+            
+            categoriesMap.set(apiCategory.id, {
+                id: apiCategory.id,
+                slug: apiCategory.slug || createCategorySlug(apiCategory.name, apiCategory.id),
+                name: apiCategory.name || 'فئة غير محددة',
+                productCount: 0,
+                subCategoryProductCount: 0, // Track products only in subcategories
+                subCategories: new Map() // key: subCategoryId, value: subcategory object
+            });
+        });
 
-            if (!categoriesMap.has(normalizedKey)) {
-                const apiCategory = apiCategoryLookup.get(normalizedKey);
-                categoriesMap.set(normalizedKey, {
-                    id: apiCategory?.id || data.id || data.slug || normalizedKey,
-                    slug: apiCategory?.slug || data.slug || data.id || normalizedKey,
-                    name: apiCategory?.name || data.name || 'فئة غير محددة',
-                    productCount: 0,
-                    subCategories: new Map()
-                });
-            }
-
-            return categoriesMap.get(normalizedKey);
-        };
-
-        const ensureSubCategoryEntry = (categoryEntry, slugKey, data = {}) => {
-            if (!categoryEntry) return null;
-            const normalizedKey = normalizeFilterValue(slugKey || data.slug || data.id || data.name);
-            if (!normalizedKey) return null;
-
-            if (!categoryEntry.subCategories.has(normalizedKey)) {
-                categoryEntry.subCategories.set(normalizedKey, {
-                    id: data.id || data.slug || normalizedKey,
-                    slug: data.slug || data.id || normalizedKey,
-                    name: data.name || 'قسم فرعي',
-                    productCount: 0
-                });
-            }
-
-            return categoryEntry.subCategories.get(normalizedKey);
-        };
+        // ===================================================================
+        // STEP 3: Count products in each category/subcategory
+        // ===================================================================
+        // Maps to track direct product counts (separate from totals)
+        const directProductsByCategory = new Map(); // categoryId -> count
+        const productsBySubCategory = new Map();   // subCategoryId -> count
 
         allProducts.forEach(product => {
-            const categoryEntry = ensureCategoryEntry(product.categorySlug || product.categoryId, {
-                id: product.categoryId,
-                slug: product.categorySlug,
-                name: product.categoryName
-            });
-            if (!categoryEntry) return;
+            // Check if product has a valid category ID
+            const categoryId = product.categoryId;
+            if (!categoryId) return;
 
-            categoryEntry.productCount += 1;
+            // Get or create category entry
+            let categoryEntry = categoriesMap.get(categoryId);
+            if (!categoryEntry && apiCategoryById.has(categoryId)) {
+                // Use API category if available
+                const apiCategory = apiCategoryById.get(categoryId);
+                categoryEntry = {
+                    id: apiCategory.id,
+                    slug: apiCategory.slug || createCategorySlug(apiCategory.name, apiCategory.id),
+                    name: apiCategory.name || 'فئة غير محددة',
+                    productCount: 0,
+                    subCategoryProductCount: 0,
+                    subCategories: new Map()
+                };
+                categoriesMap.set(categoryId, categoryEntry);
+            }
 
-            if (product.subCategorySlug && product.subCategorySlug !== 'all') {
-                const subEntry = ensureSubCategoryEntry(categoryEntry, product.subCategorySlug || product.subCategoryId, {
-                    id: product.subCategoryId,
-                    slug: product.subCategorySlug,
-                    name: product.subCategoryName
-                });
-                if (subEntry) {
-                    subEntry.productCount += 1;
+            if (!categoryEntry) {
+                // Category not in API, create entry from product data only as last resort
+                // Use the category name from API if exists, otherwise product data
+                const apiCat = apiCategoryBySlug.get(normalizeFilterValue(product.categorySlug));
+                categoryEntry = {
+                    id: categoryId,
+                    slug: product.categorySlug || createCategorySlug(product.categoryName, categoryId),
+                    name: apiCat?.name || product.categoryName || 'فئة غير محددة',
+                    productCount: 0,
+                    subCategoryProductCount: 0,
+                    subCategories: new Map()
+                };
+                categoriesMap.set(categoryId, categoryEntry);
+            }
+
+            // Count products in subcategories
+            if (product.subCategoryId && product.subCategoryId !== 'all') {
+                const subCategoryId = product.subCategoryId;
+
+                // Create or get subcategory entry
+                if (!categoryEntry.subCategories.has(subCategoryId)) {
+                    categoryEntry.subCategories.set(subCategoryId, {
+                        id: subCategoryId,
+                        slug: product.subCategorySlug || subCategoryId,
+                        name: product.subCategoryName || 'قسم فرعي',
+                        productCount: 0
+                    });
                 }
+
+                const subEntry = categoryEntry.subCategories.get(subCategoryId);
+                subEntry.productCount += 1;
+                productsBySubCategory.set(subCategoryId, (productsBySubCategory.get(subCategoryId) || 0) + 1);
+                
+                // Count toward subcategory products for parent category
+                categoryEntry.subCategoryProductCount += 1;
+            } else {
+                // Product is directly at category level (no subcategory)
+                directProductsByCategory.set(categoryId, (directProductsByCategory.get(categoryId) || 0) + 1);
             }
         });
 
-        const filteredCategories = new Map();
+        // ===================================================================
+        // STEP 4: Finalize product counts for categories
+        // ===================================================================
+        categoriesMap.forEach((category, categoryId) => {
+            // Main category count = direct products at this level + all products in subcategories
+            const directCount = directProductsByCategory.get(categoryId) || 0;
+            category.productCount = directCount + category.subCategoryProductCount;
+        });
 
-        categoriesMap.forEach((category, key) => {
-            const filteredSubCategories = new Map();
-            category.subCategories.forEach((subCategory, subKey) => {
+        // ===================================================================
+        // STEP 5: Filter out empty subcategories only (keep all categories)
+        // ===================================================================
+        const categoriesToRender = new Map();
+        categoriesMap.forEach((category, categoryId) => {
+            // Show all categories, but filter out empty subcategories
+            const subCategoriesToKeep = new Map();
+            category.subCategories.forEach((subCategory, subCategoryId) => {
                 if (subCategory.productCount > 0) {
-                    filteredSubCategories.set(subKey, subCategory);
+                    subCategoriesToKeep.set(subCategoryId, subCategory);
                 }
             });
 
-            if (category.productCount > 0 && filteredSubCategories.size > 0) {
-                filteredCategories.set(key, {
-                    ...category,
-                    subCategories: filteredSubCategories
-                });
-            }
+            category.subCategories = subCategoriesToKeep;
+            categoriesToRender.set(categoryId, category);
         });
 
-        categoryHierarchy = filteredCategories;
+        // Update hierarchy for rendering
+        categoryHierarchy = categoriesToRender;
 
+        // ===================================================================
+        // STEP 6: Render the category hierarchy to DOM
+        // ===================================================================
         const fragment = document.createDocumentFragment();
         const normalizedCurrentCategory = normalizeFilterValue(currentCategory);
         const normalizedCurrentCategoryId = normalizeFilterValue(currentCategoryId);
         const normalizedCurrentSubCategory = normalizeFilterValue(currentSubCategory);
 
+        // Add "All" button
         const allButton = document.createElement('button');
         allButton.className = 'filter-btn';
         allButton.dataset.category = 'all';
@@ -970,14 +1252,17 @@
             hasActiveCategory = true;
         }
 
-        categoryHierarchy.forEach(category => {
+        // Render each category with its subcategories
+        categoriesToRender.forEach((category, categoryId) => {
             const categoryButton = document.createElement('button');
-            categoryButton.className = 'filter-btn' + (category.subCategories.size ? ' has-subcategory' : '');
-            categoryButton.dataset.category = category.slug || category.id;
-            categoryButton.dataset.categoryId = category.id || category.slug || '';
-            const chevronHtml = category.subCategories.size
+            categoryButton.className = 'filter-btn' + (category.subCategories.size > 0 ? ' has-subcategory' : '');
+            categoryButton.dataset.category = category.slug;
+            categoryButton.dataset.categoryId = category.id;
+            
+            const chevronHtml = category.subCategories.size > 0
                 ? '<span class="filter-chevron"><i class="fa-solid fa-chevron-down" aria-hidden="true"></i></span>'
                 : '';
+            
             const catButtonHtml = `
                 <span class="filter-label">${category.name}</span>
                 <span class="filter-meta">
@@ -987,9 +1272,10 @@
             `;
             safeSetHTML(categoryButton, sanitizeHtmlContent(catButtonHtml));
 
-            const isActiveCategory = [category.slug, category.id, category.name]
-                .map(normalizeFilterValue)
-                .some(value => value && (value === normalizedCurrentCategory || value === normalizedCurrentCategoryId));
+            // Check if this category is active
+            const isActiveCategory = [category.slug, category.id]
+                .some(value => normalizeFilterValue(value) === normalizedCurrentCategory || normalizeFilterValue(value) === normalizedCurrentCategoryId);
+            
             if (isActiveCategory) {
                 categoryButton.classList.add('active');
                 hasActiveCategory = true;
@@ -997,23 +1283,25 @@
 
             fragment.appendChild(categoryButton);
 
-            if (category.subCategories.size) {
+            // Render subcategories if they exist
+            if (category.subCategories.size > 0) {
                 const subContainer = document.createElement('div');
                 subContainer.className = 'sub-categories';
-
                 let hasActiveSub = false;
 
-                category.subCategories.forEach(subCategory => {
+                category.subCategories.forEach((subCategory, subCategoryId) => {
                     const subButton = document.createElement('button');
                     subButton.className = 'sub-filter-btn';
                     subButton.dataset.subcategory = subCategory.slug || subCategory.id;
+                    
                     const subButtonHtml = `
                         <span class="sub-label">${subCategory.name}</span>
                         <span class="sub-count">${subCategory.productCount}</span>
                     `;
                     safeSetHTML(subButton, sanitizeHtmlContent(subButtonHtml));
 
-                    const isActiveSub = isFilterMatch(subCategory.slug || subCategory.id || subCategory.name, currentSubCategory);
+                    // Check if this subcategory is active
+                    const isActiveSub = isFilterMatch(subCategory.slug || subCategory.id, currentSubCategory);
                     if (isActiveCategory && isActiveSub) {
                         subButton.classList.add('active');
                         hasActiveSub = true;
@@ -1022,6 +1310,7 @@
                     subContainer.appendChild(subButton);
                 });
 
+                // Show subcategories if one is active
                 if (isActiveCategory && hasActiveSub) {
                     subContainer.classList.add('show');
                     categoryButton.classList.add('expanded');
@@ -1031,6 +1320,7 @@
             }
         });
 
+        // Ensure at least "All" is selected
         if (!hasActiveCategory) {
             allButton.classList.add('active');
         }
