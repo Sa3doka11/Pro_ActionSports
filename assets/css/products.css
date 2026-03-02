@@ -1825,3 +1825,39 @@ STICKY FILTER BAR - New Modern Design
         grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
     }
 }
+/* ===================================================================
+OUT-OF-STOCK PRODUCT UI HANDLING
+=================================================================== */
+
+.product-card.out-of-stock {
+    opacity: 0.4;
+    position: relative;
+    filter: grayscale(70%);
+}
+
+.product-card .out-overlay {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: #e60023;
+    color: white;
+    padding: 4px 10px;
+    font-size: 12px;
+    border-radius: 20px;
+    font-weight: 600;
+    z-index: 10;
+}
+
+.add-to-cart-btn.disabled {
+    background: #ccc !important;
+    color: #999 !important;
+    cursor: not-allowed !important;
+    pointer-events: none;
+}
+
+.add-to-cart-btn[disabled] {
+    background: #ccc !important;
+    color: #999 !important;
+    cursor: not-allowed !important;
+    pointer-events: none;
+}

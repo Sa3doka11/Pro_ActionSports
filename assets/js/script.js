@@ -4036,8 +4036,9 @@ document.addEventListener('auth:user-updated', () => {
             const image = resolveProductImage(product);
             const slug = product.slug || product.handle || id;
             const description = product.shortDescription || product.description || 'اكتشف المزيد عن هذا المنتج عند فتح التفاصيل.';
+            const quantity = Number(product.quantity) || Number(product.stock) || Number(product.availableQuantity) || Number(product.stockQuantity) || 0;
 
-            return { id, name, categoryName, price, originalPrice, discountPrice, installationPrice, image, slug, description };
+            return { id, name, categoryName, price, originalPrice, discountPrice, installationPrice, image, slug, description, quantity };
         });
     }
 
@@ -4050,6 +4051,12 @@ document.addEventListener('auth:user-updated', () => {
 
             button.addEventListener('click', event => {
                 event.preventDefault();
+                
+                // Prevent action if button is disabled (out of stock)
+                if (button.hasAttribute('disabled') || button.dataset.disabled === 'true') {
+                    return;
+                }
+
                 const card = button.closest('.product-card');
                 if (!card) return;
 
@@ -4100,7 +4107,7 @@ document.addEventListener('auth:user-updated', () => {
 
         const dataset = normalized;
 
-        const gridHtml = dataset.map(({ id, name, categoryName, price, originalPrice, discountPrice, installationPrice, image, slug, description }) => {
+        const gridHtml = dataset.map(({ id, name, categoryName, price, originalPrice, discountPrice, installationPrice, image, slug, description, quantity }) => {
             const detailId = id || slug || '';
             const productUrl = detailId ? `./productDetails.html?id=${encodeURIComponent(detailId)}` : '#';
             const hasDiscount = Number.isFinite(originalPrice) && originalPrice > 0
@@ -4113,12 +4120,17 @@ document.addEventListener('auth:user-updated', () => {
             const originalPriceAttr = originalPrice != null ? originalPrice : '';
             const discountPriceAttr = discountPrice != null ? discountPrice : '';
             const datasetInstallation = installationPrice != null ? installationPrice : 0;
+            const isOutOfStock = Number(quantity) === 0;
+            const outOfStockClass = isOutOfStock ? ' out-of-stock' : '';
+            const disabledAttr = isOutOfStock ? 'disabled data-disabled="true"' : '';
+            const overlayHtml = isOutOfStock ? '<div class="out-overlay">نفد المخزون</div>' : '';
 
             return `
                 <div class="col-lg-4 col-md-6">
-                    <div class="product-card" data-id="${id}" data-name="${name}" data-price="${datasetPrice}" data-original-price="${originalPriceAttr}" data-discount-price="${discountPriceAttr}" data-installation-price="${datasetInstallation}" data-image="${image}">
+                    <div class="product-card${outOfStockClass}" data-id="${id}" data-name="${name}" data-price="${datasetPrice}" data-original-price="${originalPriceAttr}" data-discount-price="${discountPriceAttr}" data-installation-price="${datasetInstallation}" data-image="${image}">
                         <div class="image-thumb">
                             <img src="${image}" alt="${name}">
+                            ${overlayHtml}
                         </div>
                         <div class="down-content">
                             <span>${categoryName}</span>
@@ -4127,7 +4139,7 @@ document.addEventListener('auth:user-updated', () => {
                             <p class="product-price">${priceMarkup} <img src="./assets/images/Saudi_Riyal_Symbol.png" alt="" aria-hidden="true" class="saudi-riyal-symbol" /></p>
                             <div class="product-buttons">
                                 <a href="${productUrl}" class="secondary-button">عرض المنتج</a>
-                                <a href="#" class="add-to-cart-btn secondary-button" data-id="${id}" data-installation-price="${datasetInstallation}">أضف للسلة</a>
+                                <a href="#" class="add-to-cart-btn secondary-button${isOutOfStock ? ' disabled' : ''}" data-id="${id}" data-installation-price="${datasetInstallation}" ${disabledAttr}>أضف للسلة</a>
                             </div>
                         </div>
                     </div>

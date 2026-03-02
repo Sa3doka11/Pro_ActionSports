@@ -175,6 +175,12 @@
                 const addButton = event.target.closest('.add-to-cart-btn');
                 if (!addButton || !productsGrid.contains(addButton)) return;
 
+                // Prevent action if button is disabled (out of stock)
+                if (addButton.hasAttribute('disabled') || addButton.dataset.disabled === 'true') {
+                    event.preventDefault();
+                    return;
+                }
+
                 event.preventDefault();
                 const productId = addButton.dataset.id;
                 const product = allProducts.find(p => p.id === productId);
@@ -393,11 +399,16 @@
                 : `<span class="current-price">${formatPrice(product.price)}</span>`;
             const originalPriceAttr = product.originalPrice != null ? product.originalPrice : '';
             const discountPriceAttr = product.discountPrice != null ? product.discountPrice : '';
+            const isOutOfStock = Number(product.quantity) === 0;
+            const outOfStockClass = isOutOfStock ? ' out-of-stock' : '';
+            const disabledAttr = isOutOfStock ? 'disabled data-disabled="true"' : '';
+            const overlayHtml = isOutOfStock ? '<div class="out-overlay">نفد المخزون</div>' : '';
 
             return `
-            <div class="product-item product-card" data-id="${sanitizeHtmlContent(product.id)}" data-name="${sanitizeHtmlContent(product.name)}" data-price="${product.price}" data-original-price="${originalPriceAttr}" data-discount-price="${discountPriceAttr}" data-image="${sanitizeHtmlContent(product.image)}" data-category="${sanitizeHtmlContent(product.categorySlug)}">
+            <div class="product-item product-card${outOfStockClass}" data-id="${sanitizeHtmlContent(product.id)}" data-name="${sanitizeHtmlContent(product.name)}" data-price="${product.price}" data-original-price="${originalPriceAttr}" data-discount-price="${discountPriceAttr}" data-image="${sanitizeHtmlContent(product.image)}" data-category="${sanitizeHtmlContent(product.categorySlug)}">
                 <div class="image-thumb">
                     <img src="${sanitizeHtmlContent(product.image)}" alt="${sanitizeHtmlContent(product.name)}" loading="lazy">
+                    ${overlayHtml}
                 </div>
                 <div class="down-content">
                     <span>${sanitizeHtmlContent(product.categoryName)}</span>
@@ -408,7 +419,7 @@
                     <p class="product-price">${priceMarkup} <img src="./assets/images/Saudi_Riyal_Symbol.png" alt="" aria-hidden="true" class="saudi-riyal-symbol" /></p>
                     <div class="product-buttons">
                         <a href="productDetails.html?id=${sanitizeHtmlContent(product.id)}" class="secondary-button">عرض المنتج</a>
-                        <a href="#" class="add-to-cart-btn secondary-button" data-id="${sanitizeHtmlContent(product.id)}">أضف للسلة</a>
+                        <a href="#" class="add-to-cart-btn secondary-button${isOutOfStock ? ' disabled' : ''}" data-id="${sanitizeHtmlContent(product.id)}" ${disabledAttr}>أضف للسلة</a>
                     </div>
                 </div>
             </div>
@@ -610,11 +621,16 @@
                 : `<span class="current-price">${formatPrice(product.price)}</span>`;
             const originalPriceAttr = product.originalPrice != null ? product.originalPrice : '';
             const discountPriceAttr = product.discountPrice != null ? product.discountPrice : '';
+            const isOutOfStock = Number(product.quantity) === 0;
+            const outOfStockClass = isOutOfStock ? ' out-of-stock' : '';
+            const disabledAttr = isOutOfStock ? 'disabled data-disabled="true"' : '';
+            const overlayHtml = isOutOfStock ? '<div class="out-overlay">نفد المخزون</div>' : '';
 
             return `
-            <div class="product-item product-card" data-id="${sanitizeHtmlContent(product.id)}" data-name="${sanitizeHtmlContent(product.name)}" data-price="${product.price}" data-original-price="${originalPriceAttr}" data-discount-price="${discountPriceAttr}" data-image="${sanitizeHtmlContent(product.image)}" data-category="${sanitizeHtmlContent(product.categorySlug)}">
+            <div class="product-item product-card${outOfStockClass}" data-id="${sanitizeHtmlContent(product.id)}" data-name="${sanitizeHtmlContent(product.name)}" data-price="${product.price}" data-original-price="${originalPriceAttr}" data-discount-price="${discountPriceAttr}" data-image="${sanitizeHtmlContent(product.image)}" data-category="${sanitizeHtmlContent(product.categorySlug)}">
                 <div class="image-thumb">
                     <img src="${sanitizeHtmlContent(product.image)}" alt="${sanitizeHtmlContent(product.name)}" loading="lazy">
+                    ${overlayHtml}
                 </div>
                 <div class="down-content">
                     <span>${sanitizeHtmlContent(product.categoryName)}</span>
@@ -625,7 +641,7 @@
                     <p class="product-price">${priceMarkup} <img src="./assets/images/Saudi_Riyal_Symbol.png" alt="" aria-hidden="true" class="saudi-riyal-symbol" /></p>
                     <div class="product-buttons">
                         <a href="productDetails.html?id=${sanitizeHtmlContent(product.id)}" class="secondary-button">عرض المنتج</a>
-                        <a href="#" class="add-to-cart-btn secondary-button" data-id="${sanitizeHtmlContent(product.id)}">أضف للسلة</a>
+                        <a href="#" class="add-to-cart-btn secondary-button${isOutOfStock ? ' disabled' : ''}" data-id="${sanitizeHtmlContent(product.id)}" ${disabledAttr}>أضف للسلة</a>
                     </div>
                 </div>
             </div>
@@ -1066,6 +1082,7 @@
         const description = product.shortDescription || product.description || 'اكتشف المزيد عن هذا المنتج عند فتح التفاصيل.';
 
         const sold = Number(product.sold) || 0;
+        const quantity = Number(product.quantity) || Number(product.stock) || Number(product.availableQuantity) || Number(product.stockQuantity) || 0;
 
         return {
             id,
@@ -1085,6 +1102,7 @@
             warrantyInfo: product.warrantyInfo || '',
             deliveryInfo: product.deliveryInfo || '',
             sold,
+            quantity,
             raw: product
         };
     }

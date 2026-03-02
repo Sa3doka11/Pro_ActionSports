@@ -190,6 +190,12 @@
             return;
         }
 
+        // Guard: Prevent adding out-of-stock products
+        if (Number(product.quantity) === 0) {
+            showToast('هذا المنتج غير متوفر حالياً', 'error');
+            return;
+        }
+
         try {
             await ensureCartStateLoaded();
             await addProductToCartShared(product.id, 1, {
@@ -318,6 +324,12 @@
 
         addToCartBtn.addEventListener('click', function(e) {
             e.preventDefault();
+
+            // Prevent adding out-of-stock products
+            if (addToCartBtn.hasAttribute('disabled') || addToCartBtn.getAttribute('data-disabled') === 'true') {
+                showToast('هذا المنتج غير متوفر حالياً', 'error');
+                return;
+            }
 
             if (currentProduct) {
                 addToCart(currentProduct);
@@ -513,6 +525,31 @@
             `);
         }
 
+        // Handle out-of-stock state
+        const isOutOfStock = Number(product.quantity) === 0;
+        const addToCartBtn = document.getElementById('addToCartBtn');
+        const outOfStockMessage = document.getElementById('outOfStockMessage');
+
+        if (addToCartBtn) {
+            if (isOutOfStock) {
+                addToCartBtn.classList.add('disabled-btn');
+                addToCartBtn.setAttribute('disabled', 'true');
+                addToCartBtn.setAttribute('data-disabled', 'true');
+            } else {
+                addToCartBtn.classList.remove('disabled-btn');
+                addToCartBtn.removeAttribute('disabled');
+                addToCartBtn.removeAttribute('data-disabled');
+            }
+        }
+
+        if (outOfStockMessage) {
+            if (isOutOfStock) {
+                outOfStockMessage.style.display = 'block';
+            } else {
+                outOfStockMessage.style.display = 'none';
+            }
+        }
+
         applyDetailInlineFormatting();
     }
 
@@ -644,6 +681,7 @@
             originalPrice,
             discountPrice,
             installationPrice,
+            quantity: Number(rawProduct.quantity) || 0,
             specs,
             usage,
             images,

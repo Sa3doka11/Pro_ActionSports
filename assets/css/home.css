@@ -847,6 +847,7 @@
       background-color: var(--bg-light);
       margin-bottom: 18px;
       flex-shrink: 0;
+      position: relative;
     }
 
     .product-card h4 {
@@ -1201,6 +1202,7 @@
       background-color: var(--bg-light);
       margin-bottom: 12px;
       flex-shrink: 0;
+      position: relative;
     }
 
     .product-card .image-thumb img {
@@ -1446,6 +1448,7 @@
       background-color: var(--bg-light);
       margin-bottom: 12px;
       flex-shrink: 0;
+      position: relative;
     }
 
     .product-card .image-thumb img {
@@ -1563,6 +1566,7 @@
       background-color: var(--bg-light);
       margin-bottom: 12px;
       flex-shrink: 0;
+      position: relative;
     }
 
     .product-card .image-thumb img {
@@ -1878,3 +1882,42 @@
     color: #7a7a7a;
     margin-bottom: 0;
   }
+
+}
+
+/* ===================================================================
+OUT-OF-STOCK PRODUCT UI HANDLING FOR HOME PAGE
+=================================================================== */
+
+.product-card.out-of-stock {
+  opacity: 0.4;
+  position: relative;
+  filter: grayscale(70%);
+}
+
+.product-card .out-overlay {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: #e60023;
+  color: white;
+  padding: 4px 10px;
+  font-size: 12px;
+  border-radius: 20px;
+  font-weight: 600;
+  z-index: 10;
+}
+
+.add-to-cart-btn.disabled {
+  background: #ccc !important;
+  color: #999 !important;
+  cursor: not-allowed !important;
+  pointer-events: none;
+}
+
+.add-to-cart-btn[disabled] {
+  background: #ccc !important;
+  color: #999 !important;
+  cursor: not-allowed !important;
+  pointer-events: none;
+}
